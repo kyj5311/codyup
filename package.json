@@ -1,0 +1,8 @@
+{
+  "name": "codyup",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ]
+}
