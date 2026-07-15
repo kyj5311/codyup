@@ -1,7 +1,6 @@
 // 온보딩 전 구간에서 공유하는 타입
 // CLAUDE.md 컨벤션: 타입은 PascalCase
-
-export type Season = "봄" | "여름" | "가을" | "겨울" | "사계절";
+import type { ClosetItem } from "./closet";
 
 export type BodyShape =
   | "스트레이트"
@@ -15,14 +14,13 @@ export type BodyShape =
 export interface PersonalColorInput {
   uploadedImageFile: File | null;
   // 사용자가 사진 없이 직접 선택하는 경우를 위한 폴백 선택지
-  selfSelectedTone: "웜톤" | "쿨톤" | "모름" | null;
+  selfSelectedTone: "웜톤" | "쿨톤" | null;
 }
 
-// BE1이 비전 API 응답으로 채워주는 결과 형태 (FE1은 이 타입을 그대로 받아 렌더링만 함)
+// 퍼스널컬러 진단 API 응답 (엔드포인트는 BE1 명세서에 아직 없음, 추후 확정)
 export interface PersonalColorResult {
-  season: "봄웜" | "여름쿨" | "가을웜" | "겨울쿨";
+  season: string; // 예: "가을웜"
   confidence: number; // 0~1
-  recommendedColors: string[]; // hex 배열
 }
 
 export interface BodyInfoInput {
@@ -36,21 +34,12 @@ export interface BudgetInput {
   monthlyBudgetKrw: number | null;
 }
 
-export interface InitialClosetItem {
-  id: string;
-  imageFile: File | null;
-  previewUrl: string | null;
-  category: string | null;
-  color: string | null;
-  seasons: Season[];
-}
-
 export interface OnboardingState {
   personalColor: PersonalColorInput;
   personalColorResult: PersonalColorResult | null;
   bodyInfo: BodyInfoInput;
   budget: BudgetInput;
-  initialClosetItems: InitialClosetItem[];
+  initialClosetItems: ClosetItem[];
 }
 
 export const ONBOARDING_STEPS = [
@@ -62,3 +51,19 @@ export const ONBOARDING_STEPS = [
 ] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+/**
+ * PUT /user/profile로 보낼 personalColor 문자열 조합.
+ * BE1 응답 예시가 "가을 웜 뮤트"처럼 공백으로 구분된 문자열이라,
+ * 진단 결과("가을웜")나 수동 선택("웜톤")을 최대한 비슷한 형태로 변환.
+ */
+export function buildPersonalColorLabel(
+  result: PersonalColorResult | null,
+  manualTone: "웜톤" | "쿨톤" | null,
+): string {
+  if (result) {
+    // "가을웜" -> "가을 웜" 처럼 계절/톤 사이에 공백 삽입
+    return result.season.replace(/(웜|쿨)$/, " $1");
+  }
+  return manualTone ?? "";
+}

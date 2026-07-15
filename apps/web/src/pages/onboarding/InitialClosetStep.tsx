@@ -4,26 +4,19 @@ import Card from "../../components/Card";
 import Chip from "../../components/Chip";
 import ColorSwatchPicker from "../../components/ColorSwatchPicker";
 import ClosetItemThumbnail from "../../components/ClosetItemThumbnail";
-import { registerInitialClosetItem } from "../../api/onboarding-api";
-import { CLOSET_COLORS } from "../../types/closet";
-import type { InitialClosetItem, Season } from "../../types/onboarding";
+import { createClosetItem } from "../../api/closet-api";
+import {
+  CATEGORIES,
+  CLOSET_COLORS,
+  createEmptyDraft,
+  draftToCreatePayload,
+  type ClosetItem,
+  type ClosetItemDraft,
+} from "../../types/closet";
 
 interface InitialClosetStepProps {
-  onComplete: (items: InitialClosetItem[]) => void;
+  onComplete: (items: ClosetItem[]) => void;
   onBack: () => void;
-}
-
-const CATEGORIES = ["상의", "하의", "아우터", "신발"];
-const SEASONS: Season[] = ["봄", "여름", "가을", "겨울", "사계절"];
-
-function createEmptyDraft(): Omit<InitialClosetItem, "id"> {
-  return {
-    imageFile: null,
-    previewUrl: null,
-    category: null,
-    color: null,
-    seasons: [],
-  };
 }
 
 export default function InitialClosetStep({
@@ -31,55 +24,50 @@ export default function InitialClosetStep({
   onBack,
 }: InitialClosetStepProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [draft, setDraft] = useState(createEmptyDraft());
-  const [items, setItems] = useState<InitialClosetItem[]>([]);
+  const [draft, setDraft] = useState<ClosetItemDraft>(createEmptyDraft());
+  const [items, setItems] = useState<ClosetItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canAdd =
-    draft.imageFile !== null &&
+    draft.imagePreviewUrl !== null &&
     draft.category !== null &&
-    draft.color !== null &&
-    draft.seasons.length > 0;
+    draft.color !== null;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
     if (!file) return;
+    const previewUrl = URL.createObjectURL(file);
     setDraft((prev) => ({
       ...prev,
       imageFile: file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-  }
-
-  function toggleSeason(season: Season) {
-    setDraft((prev) => ({
-      ...prev,
-      seasons: prev.seasons.includes(season)
-        ? prev.seasons.filter((s) => s !== season)
-        : [...prev.seasons, season],
+      imagePreviewUrl: previewUrl,
+      // TODO: 이미지 업로드 API(Cloudinary 등) 나오면 여기서 업로드하고
+      // 실제 반환 URL을 넣어야 함. 지금은 로컬 blob URL을 임시로 사용.
+      imageUrl: previewUrl,
     }));
   }
 
   async function handleAddItem() {
-    if (!canAdd || !draft.imageFile || !draft.category || !draft.color) return;
+    const payload = draftToCreatePayload(draft);
+    if (!canAdd || !payload) return;
 
     setIsSaving(true);
+    setError(null);
     try {
-      // BE1 연동: 옷장 등록 화면과 동일한 API 재사용
-      await registerInitialClosetItem(draft.imageFile, {
-        category: draft.category,
-        color: draft.color,
-        seasons: draft.seasons,
-      });
+      // BE1 연동: POST /closet (내 옷장 등록과 동일한 API)
+      const res = await createClosetItem(payload);
+      if (res.success && res.data) {
+        setItems((prev) => [res.data as ClosetItem, ...prev]);
+        setDraft(createEmptyDraft());
+      } else {
+        setError(res.error?.message ?? "등록에 실패했어요. 다시 시도해 주세요.");
+      }
+    } catch {
+      setError("서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsSaving(false);
     }
-
-    setItems((prev) => [
-      ...prev,
-      { ...draft, id: crypto.randomUUID() } as InitialClosetItem,
-    ]);
-    setDraft(createEmptyDraft());
   }
 
   function handleFinish() {
@@ -102,7 +90,7 @@ export default function InitialClosetStep({
             {items.map((item) => (
               <ClosetItemThumbnail
                 key={item.id}
-                imageUrl={item.previewUrl}
+                imageUrl={item.imageUrl}
                 alt={`${item.category} 등록 완료`}
                 className="h-16 w-16 shrink-0"
               />
@@ -126,9 +114,9 @@ export default function InitialClosetStep({
           className="mt-5 flex min-h-[160px] cursor-pointer flex-col items-center justify-center border border-dashed border-line text-center"
           onClick={() => fileInputRef.current?.click()}
         >
-          {draft.previewUrl ? (
+          {draft.imagePreviewUrl ? (
             <img
-              src={draft.previewUrl}
+              src={draft.imagePreviewUrl}
               alt="등록할 옷 미리보기"
               className="h-28 w-28 rounded-2xl object-cover"
             />
@@ -149,9 +137,7 @@ export default function InitialClosetStep({
               <Chip
                 key={category}
                 selected={draft.category === category}
-                onClick={() =>
-                  setDraft((prev) => ({ ...prev, category }))
-                }
+                onClick={() => setDraft((prev) => ({ ...prev, category }))}
               >
                 {category}
               </Chip>
@@ -172,20 +158,7 @@ export default function InitialClosetStep({
           </div>
         </div>
 
-        <div className="mt-5">
-          <span className="text-sm font-medium text-ink-soft">계절</span>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {SEASONS.map((season) => (
-              <Chip
-                key={season}
-                selected={draft.seasons.includes(season)}
-                onClick={() => toggleSeason(season)}
-              >
-                {season}
-              </Chip>
-            ))}
-          </div>
-        </div>
+        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
         <Button
           className="mt-5"
