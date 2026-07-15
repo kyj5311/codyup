@@ -1,76 +1,77 @@
-import axios from "axios";
-import type { ClosetItem, ClosetItemDraft } from "../types/closet";
+import { httpClient, type ApiResponse } from "./http-client";
+import type {
+  ClosetAnalysis,
+  ClosetItem,
+  ClosetItemCreatePayload,
+  ClosetItemUpdatePayload,
+  MissingClosetItem,
+} from "../types/closet";
 
-// CLAUDE.md 규약: 공통 응답 포맷 { success, data, error }
-interface ApiResponse<T> {
-  success: boolean;
-  data: T | null;
-  error: { code: string; message: string } | null;
-}
-
-const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
-});
-
-client.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-function buildFormData(draft: ClosetItemDraft): FormData {
-  const formData = new FormData();
-  if (draft.imageFile) formData.append("image", draft.imageFile);
-  if (draft.category) formData.append("category", draft.category);
-  if (draft.subCategory) formData.append("subCategory", draft.subCategory);
-  if (draft.color) formData.append("color", draft.color.name);
-  draft.seasons.forEach((season) => formData.append("seasons[]", season));
-  formData.append("memo", draft.memo);
-  return formData;
-}
-
-/** 옷장 목록 조회 — TODO(BE1): GET /api/closet-items 응답 스펙 확정 */
+/** 옷장 목록 조회 — GET /closet */
 export async function fetchClosetItems(): Promise<ApiResponse<ClosetItem[]>> {
-  const { data } = await client.get<ApiResponse<ClosetItem[]>>(
-    "/api/closet-items",
+  const { data } = await httpClient.get<ApiResponse<ClosetItem[]>>("/closet");
+  return data;
+}
+
+/** 옷장 아이템 단건 조회 — GET /closet/:id */
+export async function fetchClosetItem(
+  id: number,
+): Promise<ApiResponse<ClosetItem>> {
+  const { data } = await httpClient.get<ApiResponse<ClosetItem>>(
+    `/closet/${id}`,
   );
   return data;
 }
 
-/** 옷 등록 — TODO(BE1): POST /api/closet-items 스펙 확정 */
+/** 옷장 아이템 등록 — POST /closet (JSON, imageUrl은 업로드 완료된 URL이어야 함) */
 export async function createClosetItem(
-  draft: ClosetItemDraft,
+  payload: ClosetItemCreatePayload,
 ): Promise<ApiResponse<ClosetItem>> {
-  const { data } = await client.post<ApiResponse<ClosetItem>>(
-    "/api/closet-items",
-    buildFormData(draft),
-    { headers: { "Content-Type": "multipart/form-data" } },
+  const { data } = await httpClient.post<ApiResponse<ClosetItem>>(
+    "/closet",
+    payload,
   );
   return data;
 }
 
-/** 옷 정보 수정 — TODO(BE1): PATCH /api/closet-items/:id 스펙 확정 */
+/** 옷장 아이템 수정 — PUT /closet/:id (수정할 필드만 전송) */
 export async function updateClosetItem(
-  id: string,
-  draft: ClosetItemDraft,
+  id: number,
+  payload: ClosetItemUpdatePayload,
 ): Promise<ApiResponse<ClosetItem>> {
-  const { data } = await client.patch<ApiResponse<ClosetItem>>(
-    `/api/closet-items/${id}`,
-    buildFormData(draft),
-    { headers: { "Content-Type": "multipart/form-data" } },
+  const { data } = await httpClient.put<ApiResponse<ClosetItem>>(
+    `/closet/${id}`,
+    payload,
   );
   return data;
 }
 
-/** 옷 삭제 — TODO(BE1): DELETE /api/closet-items/:id 스펙 확정 */
+/** 옷장 아이템 삭제 — DELETE /closet/:id */
 export async function deleteClosetItem(
-  id: string,
-): Promise<ApiResponse<null>> {
-  const { data } = await client.delete<ApiResponse<null>>(
-    `/api/closet-items/${id}`,
+  id: number,
+): Promise<ApiResponse<{ id: number; deleted: boolean }>> {
+  const { data } = await httpClient.delete<
+    ApiResponse<{ id: number; deleted: boolean }>
+  >(`/closet/${id}`);
+  return data;
+}
+
+/** 옷장 분석(카테고리/색상 집계) — GET /closet/analysis */
+export async function fetchClosetAnalysis(): Promise<
+  ApiResponse<ClosetAnalysis>
+> {
+  const { data } = await httpClient.get<ApiResponse<ClosetAnalysis>>(
+    "/closet/analysis",
+  );
+  return data;
+}
+
+/** 부족 아이템 추천 — GET /closet/missing */
+export async function fetchMissingClosetItems(): Promise<
+  ApiResponse<MissingClosetItem[]>
+> {
+  const { data } = await httpClient.get<ApiResponse<MissingClosetItem[]>>(
+    "/closet/missing",
   );
   return data;
 }

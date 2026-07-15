@@ -2,11 +2,10 @@ import { useState } from "react";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
-import { saveMonthlyBudget } from "../../api/onboarding-api";
 import type { BudgetInput } from "../../types/onboarding";
 
 interface BudgetStepProps {
-  onComplete: (input: BudgetInput) => void;
+  onComplete: (input: BudgetInput) => void | Promise<void>;
   onBack: () => void;
 }
 
@@ -30,15 +29,12 @@ export default function BudgetStep({ onComplete, onBack }: BudgetStepProps) {
   async function handleNext() {
     if (!canProceed) return;
     // 통화/가격: KRW, 정수(원 단위, 소수점 없음) — CLAUDE.md API 규약 준수
-    const payload: BudgetInput = { monthlyBudgetKrw: numericBudget };
-
     setIsSaving(true);
     try {
-      // BE2 연동: 예산 데이터 저장, 구매 로드맵 엔진과 연결
-      await saveMonthlyBudget(payload);
+      // 퍼스널컬러+체형+예산 통합 저장(PUT /user/profile)은 OnboardingFlow에서 처리
+      await onComplete({ monthlyBudgetKrw: numericBudget });
     } finally {
       setIsSaving(false);
-      onComplete(payload);
     }
   }
 

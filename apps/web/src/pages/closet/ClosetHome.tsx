@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
-import { Bell, Menu, Plus, X } from "lucide-react";
+import { Bell, Menu, Plus } from "lucide-react";
 import Tabs from "../../components/Tabs";
+import ClosetItemThumbnail from "../../components/ClosetItemThumbnail";
 import type { ClosetItem, ClothingCategory } from "../../types/closet";
 
-const TABS = ["전체", "상의", "하의", "아우터", "신발"] as const;
+const TABS = ["전체", "상의", "하의", "아우터", "신발", "악세서리"] as const;
 type TabValue = (typeof TABS)[number];
 
 interface ClosetHomeProps {
   items: ClosetItem[];
   isLoading: boolean;
-  onSelectItem: (id: string) => void;
+  onSelectItem: (id: number) => void;
   onAddNew: () => void;
-  onDeleteItem: (id: string) => void;
+  onDeleteItem: (id: number) => void;
 }
 
 export default function ClosetHome({
@@ -67,31 +68,13 @@ export default function ClosetHome({
       ) : (
         <div className="mt-4 grid grid-cols-3 gap-3">
           {filteredItems.map((item) => (
-            <div key={item.id} className="relative">
-              <button
-                type="button"
-                onClick={() => onSelectItem(item.id)}
-                className="aspect-[3/4] w-full overflow-hidden rounded-2xl bg-card"
-              >
-                {item.imageUrl && (
-                  <img
-                    src={item.imageUrl}
-                    alt={`${item.category} ${item.subCategory}`}
-                    className="h-full w-full object-cover"
-                  />
-                )}
-              </button>
-              {isEditing && (
-                <button
-                  type="button"
-                  aria-label="삭제"
-                  onClick={() => onDeleteItem(item.id)}
-                  className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-danger-bg"
-                >
-                  <X size={14} strokeWidth={2.5} />
-                </button>
-              )}
-            </div>
+            <ClosetItemThumbnail
+              key={item.id}
+              imageUrl={item.imageUrl}
+              alt={`${item.category} ${item.color}`}
+              onClick={() => onSelectItem(item.id)}
+              onDelete={isEditing ? () => onDeleteItem(item.id) : undefined}
+            />
           ))}
         </div>
       )}

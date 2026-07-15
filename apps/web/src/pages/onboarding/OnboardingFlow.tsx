@@ -5,7 +5,12 @@ import PersonalColorStep from "./PersonalColorStep";
 import BodyInfoStep from "./BodyInfoStep";
 import BudgetStep from "./BudgetStep";
 import InitialClosetStep from "./InitialClosetStep";
-import type { OnboardingState, OnboardingStep } from "../../types/onboarding";
+import { saveUserProfile } from "../../api/onboarding-api";
+import {
+  buildPersonalColorLabel,
+  type OnboardingState,
+  type OnboardingStep,
+} from "../../types/onboarding";
 
 const INITIAL_STATE: OnboardingState = {
   personalColor: { uploadedImageFile: null, selfSelectedTone: null },
@@ -22,6 +27,7 @@ interface OnboardingFlowProps {
 export default function OnboardingFlow({ onFinish }: OnboardingFlowProps) {
   const [step, setStep] = useState<OnboardingStep>("intro");
   const [state, setState] = useState<OnboardingState>(INITIAL_STATE);
+  const [manualTone, setManualTone] = useState<"웜톤" | "쿨톤" | null>(null);
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[480px] bg-cream px-6 pb-10 pt-8">
@@ -38,8 +44,9 @@ export default function OnboardingFlow({ onFinish }: OnboardingFlowProps) {
       {step === "personal-color" && (
         <PersonalColorStep
           onBack={() => setStep("intro")}
-          onComplete={(result) => {
+          onComplete={(result, tone) => {
             setState((prev) => ({ ...prev, personalColorResult: result }));
+            setManualTone(tone);
             setStep("body-info");
           }}
         />
@@ -58,8 +65,26 @@ export default function OnboardingFlow({ onFinish }: OnboardingFlowProps) {
       {step === "budget" && (
         <BudgetStep
           onBack={() => setStep("body-info")}
-          onComplete={(budget) => {
-            setState((prev) => ({ ...prev, budget }));
+          onComplete={async (budget) => {
+            const nextState = { ...state, budget };
+            setState(nextState);
+
+            // BE1 연동: 퍼스널컬러+체형+예산을 하나의 프로필로 저장 (PUT /user/profile)
+            if (nextState.bodyInfo.bodyShape && budget.monthlyBudgetKrw) {
+              try {
+                await saveUserProfile({
+                  personalColor: buildPersonalColorLabel(
+                    nextState.personalColorResult,
+                    manualTone,
+                  ),
+                  bodyType: nextState.bodyInfo.bodyShape,
+                  monthlyBudget: budget.monthlyBudgetKrw,
+                });
+              } catch {
+                // BE1 서버 연결 전이라도 온보딩 진행은 막지 않음
+              }
+            }
+
             setStep("initial-closet");
           }}
         />

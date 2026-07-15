@@ -6,7 +6,10 @@ import { requestPersonalColorDiagnosis } from "../../api/onboarding-api";
 import type { PersonalColorResult } from "../../types/onboarding";
 
 interface PersonalColorStepProps {
-  onComplete: (result: PersonalColorResult | null) => void;
+  onComplete: (
+    result: PersonalColorResult | null,
+    manualTone: "웜톤" | "쿨톤" | null,
+  ) => void;
   onBack: () => void;
 }
 
@@ -55,7 +58,7 @@ export default function PersonalColorStep({
   }
 
   function handleNext() {
-    onComplete(result);
+    onComplete(result, manualTone);
   }
 
   const canProceed = status === "done" || manualTone !== null;
@@ -124,15 +127,9 @@ export default function PersonalColorStep({
           <Card tone="yellow" className="mt-4">
             <p className="text-sm font-semibold text-ink-soft">진단 결과</p>
             <p className="mt-1 text-xl font-bold text-ink">{result.season}</p>
-            <div className="mt-3 flex gap-2">
-              {result.recommendedColors.map((hex) => (
-                <span
-                  key={hex}
-                  className="h-8 w-8 rounded-full border border-line"
-                  style={{ backgroundColor: hex }}
-                />
-              ))}
-            </div>
+            <p className="mt-1 text-xs text-ink-soft">
+              신뢰도 {Math.round(result.confidence * 100)}%
+            </p>
           </Card>
         )}
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Button from "../../components/Button";
 import Chip from "../../components/Chip";
-import { saveBodyInfo } from "../../api/onboarding-api";
 import type { BodyInfoInput, BodyShape } from "../../types/onboarding";
 
 interface BodyInfoStepProps {
@@ -25,26 +24,18 @@ export default function BodyInfoStep({
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [bodyShape, setBodyShape] = useState<BodyShape | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
 
   const canProceed = heightCm !== "" && weightKg !== "" && bodyShape !== null;
 
-  async function handleNext() {
+  function handleNext() {
     if (!canProceed) return;
-    const payload: BodyInfoInput = {
+    // 키/몸무게는 BE1 명세서의 프로필 API엔 아직 없는 필드라 서버로는 보내지
+    // 않고, 화면에는 향후 체형 추천 고도화를 위해 계속 입력받아 둠.
+    onComplete({
       heightCm: Number(heightCm),
       weightKg: Number(weightKg),
       bodyShape,
-    };
-
-    setIsSaving(true);
-    try {
-      // BE1 연동: 체형 프로필 저장
-      await saveBodyInfo(payload);
-    } finally {
-      setIsSaving(false);
-      onComplete(payload);
-    }
+    });
   }
 
   return (
@@ -102,8 +93,8 @@ export default function BodyInfoStep({
       </div>
 
       <div className="mt-8 flex flex-col gap-3">
-        <Button onClick={handleNext} disabled={!canProceed || isSaving}>
-          {isSaving ? "저장 중..." : "다음"}
+        <Button onClick={handleNext} disabled={!canProceed}>
+          다음
         </Button>
         <Button variant="ghost" size="md" onClick={onBack}>
           이전으로
