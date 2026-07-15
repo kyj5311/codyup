@@ -1,0 +1,52 @@
+// apps/api/src/types/index.ts
+
+export interface ApiError {
+  code: string;
+  message: string;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data: T | null;
+  error: ApiError | null;
+}
+
+export interface ClosetItem {
+  id: number;
+  userId: number;
+  imageUrl: string;
+  category: string;
+  color: string;
+  brand?: string;
+  memo?: string;
+  isFavorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClosetAnalysis {
+  totalItems: number;
+  categoryCounts: Record<string, number>;
+  colorCounts: Record<string, number>;
+  missingCategories: string[];
+}
+
+export interface MissingItemSuggestion {
+  category: string;
+  reason: string;
+  priority: number;
+}
+
+export interface UserProfile {
+  personalColor: string | null;
+  bodyType: string | null;
+  monthlyBudget: number | null;
+  email: string;
+  createdAt: string;
+}
+
+export interface UpdateUserProfileInput {
+  personalColor?: string;
+  bodyType?: string;
+  monthlyBudget?: number;
+}
