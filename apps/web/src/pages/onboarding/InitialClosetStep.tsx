@@ -2,7 +2,10 @@ import { useRef, useState } from "react";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
+import ColorSwatchPicker from "../../components/ColorSwatchPicker";
+import ClosetItemThumbnail from "../../components/ClosetItemThumbnail";
 import { registerInitialClosetItem } from "../../api/onboarding-api";
+import { CLOSET_COLORS } from "../../types/closet";
 import type { InitialClosetItem, Season } from "../../types/onboarding";
 
 interface InitialClosetStepProps {
@@ -12,14 +15,6 @@ interface InitialClosetStepProps {
 
 const CATEGORIES = ["상의", "하의", "아우터", "신발"];
 const SEASONS: Season[] = ["봄", "여름", "가을", "겨울", "사계절"];
-const COLORS = [
-  { name: "블랙", hex: "#1c1b19" },
-  { name: "화이트", hex: "#ffffff" },
-  { name: "그레이", hex: "#a8a49c" },
-  { name: "베이지", hex: "#d8c3a0" },
-  { name: "브라운", hex: "#8a5a3b" },
-  { name: "네이비", hex: "#33456b" },
-];
 
 function createEmptyDraft(): Omit<InitialClosetItem, "id"> {
   return {
@@ -105,11 +100,11 @@ export default function InitialClosetStep({
         {items.length > 0 && (
           <div className="mt-5 flex gap-2 overflow-x-auto">
             {items.map((item) => (
-              <img
+              <ClosetItemThumbnail
                 key={item.id}
-                src={item.previewUrl ?? undefined}
+                imageUrl={item.previewUrl}
                 alt={`${item.category} 등록 완료`}
-                className="h-16 w-16 shrink-0 rounded-xl object-cover"
+                className="h-16 w-16 shrink-0"
               />
             ))}
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-cream-deep text-sm font-semibold text-ink-soft">
@@ -166,24 +161,14 @@ export default function InitialClosetStep({
 
         <div className="mt-5">
           <span className="text-sm font-medium text-ink-soft">색상</span>
-          <div className="mt-2 flex flex-wrap gap-3">
-            {COLORS.map((c) => (
-              <button
-                key={c.name}
-                type="button"
-                aria-label={c.name}
-                onClick={() =>
-                  setDraft((prev) => ({ ...prev, color: c.name }))
-                }
-                className={[
-                  "h-9 w-9 rounded-full border transition-transform",
-                  draft.color === c.name
-                    ? "scale-110 border-ink ring-2 ring-ink ring-offset-2 ring-offset-cream"
-                    : "border-line",
-                ].join(" ")}
-                style={{ backgroundColor: c.hex }}
-              />
-            ))}
+          <div className="mt-2">
+            <ColorSwatchPicker
+              colors={CLOSET_COLORS}
+              selectedName={draft.color}
+              onSelect={(color) =>
+                setDraft((prev) => ({ ...prev, color: color.name }))
+              }
+            />
           </div>
         </div>
 
