@@ -3,7 +3,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';  // ✅ 추가!
+import jwt from 'jsonwebtoken';
 import closetRoutes from './routes/closet.routes';
 import userRoutes from './routes/user.routes';
 
@@ -15,13 +15,22 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// ✅ 임시 토큰 발급 API (테스트용!)
-app.post('/auth/token', (req, res) => {
-  // 테스트용 userId = 1
+// 테스트용 미들웨어: 모든 요청에 userId 추가 (개발 편의)
+app.use('/api/closet', (req, res, next) => {
+  (req as any).user = { id: 1 };
+  next();
+});
+app.use('/api/user', (req, res, next) => {
+  (req as any).user = { id: 1 };
+  next();
+});
+
+// ✅ 토큰 발급 API - /api/auth/token 으로 수정!
+app.post('/api/auth/token', (req, res) => {
   const token = jwt.sign(
     { id: 1, email: 'test@example.com' },
     process.env.JWT_SECRET || 'secret',
-    { expiresIn: '24h' }
+    { expiresIn: '1h' }
   );
   res.json({
     success: true,
@@ -30,9 +39,11 @@ app.post('/auth/token', (req, res) => {
   });
 });
 
+// 라우터 등록
 app.use('/api/closet', closetRoutes);
 app.use('/api/user', userRoutes);
 
+// 헬스 체크
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
