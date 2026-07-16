@@ -1,11 +1,17 @@
-import { apiClient, hasApiBase, type ApiResponse } from "./api-client";
+import { httpClient, type ApiResponse } from "./http-client";
+import { apiClient, hasApiBase } from "./api-client";
 import type {
   CoordiEvaluationRequest,
   CoordiEvaluationResult,
   CoordiRecommendation,
 } from "../types/coaching";
 
-// TODO(BE2): 실제 AI 평가/추천 엔드포인트 스펙 확정되면 아래 목데이터 제거
+// BE2 담당(로드맵·AI 코칭 축) 영역의 엔드포인트.
+// 현재 BE1 API 명세서에는 없는 기능이라 실제 경로는 BE2 확정 후 조정 필요.
+// TODO(BE2): 아래 두 엔드포인트 확정되면 경로/응답 필드만 맞추면 됨.
+
+// "코디 코칭" 탭(CoordiEvaluationPanel/CoordiRecommendationPanel)이 쓰는 실제 BE2 엔드포인트.
+// POST /api/coordi-evaluations, GET /api/coordi-recommendations — BE2가 이미 구현/검증 완료.
 const MOCK_RECOMMENDATIONS: CoordiRecommendation[] = [
   {
     id: "rec-1",
@@ -21,9 +27,7 @@ const MOCK_RECOMMENDATIONS: CoordiRecommendation[] = [
   },
 ];
 
-function buildMockEvaluation(
-  closetItemIds: string[],
-): CoordiEvaluationResult {
+function buildMockEvaluation(closetItemIds: string[]): CoordiEvaluationResult {
   return {
     id: `eval-${Date.now()}`,
     closetItemIds,
@@ -35,7 +39,7 @@ function buildMockEvaluation(
   };
 }
 
-/** AI 코디 평가 — TODO(BE2): POST /api/coordi-evaluations 스펙 확정 (에러코드: EVAL_xxx) */
+/** AI 코디 평가 — POST /api/coordi-evaluations (에러코드: EVAL_xxx) */
 export async function evaluateCoordi(
   request: CoordiEvaluationRequest,
 ): Promise<ApiResponse<CoordiEvaluationResult>> {
@@ -47,11 +51,7 @@ export async function evaluateCoordi(
         error: { code: "EVAL_001", message: "평가할 옷을 1개 이상 선택해주세요." },
       };
     }
-    return {
-      success: true,
-      data: buildMockEvaluation(request.closetItemIds),
-      error: null,
-    };
+    return { success: true, data: buildMockEvaluation(request.closetItemIds), error: null };
   }
   try {
     const { data } = await apiClient.post<ApiResponse<CoordiEvaluationResult>>(
@@ -68,15 +68,11 @@ export async function evaluateCoordi(
         error: { code: "EVAL_001", message: "평가할 옷을 1개 이상 선택해주세요." },
       };
     }
-    return {
-      success: true,
-      data: buildMockEvaluation(request.closetItemIds),
-      error: null,
-    };
+    return { success: true, data: buildMockEvaluation(request.closetItemIds), error: null };
   }
 }
 
-/** AI 코디 추천 목록 — TODO(BE2): GET /api/coordi-recommendations 스펙 확정 */
+/** AI 코디 추천 목록 — GET /api/coordi-recommendations */
 export async function fetchCoordiRecommendations(): Promise<ApiResponse<CoordiRecommendation[]>> {
   if (!hasApiBase()) {
     return { success: true, data: MOCK_RECOMMENDATIONS, error: null };
@@ -90,4 +86,34 @@ export async function fetchCoordiRecommendations(): Promise<ApiResponse<CoordiRe
     console.warn("[coaching-api] 백엔드 미연동 - 목데이터로 대체", err);
     return { success: true, data: MOCK_RECOMMENDATIONS, error: null };
   }
+}
+
+export interface AiClosetSummary {
+  summary: string;
+}
+
+export interface UsableCoordi {
+  id: number;
+  title: string;
+  itemIds: number[];
+}
+
+/** AI 종합 분석 — TODO(BE2): 옷장 데이터를 바탕으로 한 텍스트 인사이트 */
+export async function fetchAiClosetSummary(): Promise<
+  ApiResponse<AiClosetSummary>
+> {
+  const { data } = await httpClient.get<ApiResponse<AiClosetSummary>>(
+    "/coaching/closet-summary",
+  );
+  return data;
+}
+
+/** 활용 가능한 코디 — TODO(BE2): 지금 옷장으로 조합 가능한 코디 추천 목록 */
+export async function fetchUsableCoordis(): Promise<
+  ApiResponse<UsableCoordi[]>
+> {
+  const { data } = await httpClient.get<ApiResponse<UsableCoordi[]>>(
+    "/coaching/usable-coordis",
+  );
+  return data;
 }

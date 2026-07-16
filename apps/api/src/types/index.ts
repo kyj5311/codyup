@@ -74,3 +74,20 @@ export interface RoadmapData {
   summary: RoadmapSummary;
   items: RoadmapItem[];
 }
+
+export interface CoordiEvaluationResult {
+  id: string;
+  closetItemIds: number[];
+  score: number;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  evaluatedAt: string;
+}
+
+export interface CoordiRecommendation {
+  id: string;
+  title: string;
+  closetItemIds: number[];
+  reason: string;
+}

@@ -11,6 +11,8 @@ interface SlideContent {
   title: string;
   description: string;
   tone: "cream" | "yellow";
+  // 배경(tone)에 따라 기본 text-ink 색상이 흐리게 보이는 슬라이드를 위한 오버라이드
+  titleColorClassName?: string;
 }
 
 const SLIDES: SlideContent[] = [
@@ -18,7 +20,7 @@ const SLIDES: SlideContent[] = [
     eyebrow: "옷장 관리",
     title: "가진 옷,\n한눈에 정리해요",
     description:
-      "옷장 속 옷을 사진으로 등록하면 카테고리·색상·계절까지 자동으로 정리돼요.",
+      "옷장 속 옷을 사진 · 카테고리 · 색상 · 계절의 속성으로 정리해요.",
     tone: "cream",
   },
   {
@@ -34,6 +36,7 @@ const SLIDES: SlideContent[] = [
     description:
       "체형과 퍼스널컬러를 반영한 코디 추천과 개선 피드백을 받아볼 수 있어요.",
     tone: "cream",
+    titleColorClassName: "text-[#0a0908]",
   },
 ];
 
@@ -69,7 +72,12 @@ export default function IntroSlide({ onComplete }: IntroSlideProps) {
           <p className="text-sm font-semibold text-ink-soft">
             {slide.eyebrow}
           </p>
-          <h1 className="mt-4 whitespace-pre-line text-[28px] font-bold leading-snug text-ink">
+          <h1
+            className={[
+              "mt-4 whitespace-pre-line text-[28px] font-bold leading-snug",
+              slide.titleColorClassName ?? "text-ink",
+            ].join(" ")}
+          >
             {slide.title}
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
