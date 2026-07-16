@@ -2,33 +2,58 @@ import { useEffect, useState } from "react";
 import ClosetHome from "./ClosetHome";
 import ClosetItemForm from "./ClosetItemForm";
 import ClosetItemDetail from "./ClosetItemDetail";
+import ClosetAnalysisView from "./ClosetAnalysis";
 import {
   createClosetItem,
   deleteClosetItem,
   fetchClosetItems,
   updateClosetItem,
 } from "../../api/closet-api";
+import { MOCK_CLOSET_ITEMS } from "../../utils/mock-closet-data";
 import { draftToCreatePayload, type ClosetItem, type ClosetItemDraft } from "../../types/closet";
 
-type View = "list" | "register" | "detail";
+type View = "list" | "register" | "detail" | "analysis";
 
-export default function ClosetFlow() {
-  const [view, setView] = useState<View>("list");
+interface ClosetFlowProps {
+  // 대시보드의 "AI 분석" 버튼처럼 옷장이 아닌 분석 화면으로 바로 진입해야 하는 경우 사용.
+  // 지정하지 않으면 기존과 동일하게 목록 화면부터 시작.
+  initialView?: View;
+}
+
+export default function ClosetFlow({ initialView = "list" }: ClosetFlowProps) {
+  const [view, setView] = useState<View>(initialView);
   const [items, setItems] = useState<ClosetItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isMockData, setIsMockData] = useState(false);
+
+  // App.tsx에서 대시보드 진입 경로가 바뀔 때마다(list <-> analysis) 반영
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
 
   useEffect(() => {
     let isMounted = true;
     // BE1 연동: GET /closet 옷장 목록 조회
     fetchClosetItems()
       .then((res) => {
-        if (isMounted && res.success && res.data) setItems(res.data);
+        if (!isMounted) return;
+        if (res.success && res.data) {
+          setItems(res.data);
+        } else {
+          // API가 응답은 했지만 실패 — 데모가 비어 보이지 않도록 목업으로 대체
+          setItems(MOCK_CLOSET_ITEMS);
+          setIsMockData(true);
+        }
       })
       .catch(() => {
-        // BE1 서버 연결 전이라 실패는 정상 — 빈 옷장으로 시작
+        // BE1 서버 연결 전 — 목업 데이터로 화면 확인 가능하게 함
+        if (isMounted) {
+          setItems(MOCK_CLOSET_ITEMS);
+          setIsMockData(true);
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoading(false);
@@ -107,6 +132,7 @@ export default function ClosetFlow() {
         <ClosetHome
           items={items}
           isLoading={isLoading}
+          isMockData={isMockData}
           onSelectItem={(id) => {
             setSelectedId(id);
             setErrorMessage(null);
@@ -117,7 +143,12 @@ export default function ClosetFlow() {
             setView("register");
           }}
           onDeleteItem={handleDelete}
+          onOpenAnalysis={() => setView("analysis")}
         />
+      )}
+
+      {view === "analysis" && (
+        <ClosetAnalysisView onBack={() => setView("list")} />
       )}
 
       {view === "register" && (
