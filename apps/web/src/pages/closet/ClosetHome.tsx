@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Bell, Menu, Plus } from "lucide-react";
+import { Bell, ChevronRight, Menu, PieChart, Plus } from "lucide-react";
 import Tabs from "../../components/Tabs";
+import Card from "../../components/Card";
 import ClosetItemThumbnail from "../../components/ClosetItemThumbnail";
 import type { ClosetItem, ClothingCategory } from "../../types/closet";
 
@@ -10,17 +11,21 @@ type TabValue = (typeof TABS)[number];
 interface ClosetHomeProps {
   items: ClosetItem[];
   isLoading: boolean;
+  isMockData?: boolean;
   onSelectItem: (id: number) => void;
   onAddNew: () => void;
   onDeleteItem: (id: number) => void;
+  onOpenAnalysis: () => void;
 }
 
 export default function ClosetHome({
   items,
   isLoading,
+  isMockData = false,
   onSelectItem,
   onAddNew,
   onDeleteItem,
+  onOpenAnalysis,
 }: ClosetHomeProps) {
   const [tab, setTab] = useState<TabValue>("전체");
   const [isEditing, setIsEditing] = useState(false);
@@ -42,9 +47,27 @@ export default function ClosetHome({
         </button>
       </header>
 
+      {isMockData && (
+        <p className="mt-2 rounded-xl bg-cream-deep px-3 py-1.5 text-xs text-gray-text">
+          서버 연결 전이라 샘플 데이터를 보여주고 있어요.
+        </p>
+      )}
+
       <div className="mt-4">
         <Tabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
+
+      <button type="button" onClick={onOpenAnalysis} className="mt-4 block w-full text-left">
+        <Card tone="yellow" className="flex items-center justify-between !py-3.5">
+          <div className="flex items-center gap-2">
+            <PieChart size={18} strokeWidth={2} className="text-ink" />
+            <span className="text-sm font-semibold text-ink">
+              옷장 분석 보기
+            </span>
+          </div>
+          <ChevronRight size={18} strokeWidth={2} className="text-ink" />
+        </Card>
+      </button>
 
       <div className="mt-4 flex items-center justify-between">
         <p className="text-sm text-gray-text">총 {filteredItems.length}개</p>
