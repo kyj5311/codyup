@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// CLAUDE.md 규약: 공통 응답 포맷 { success, data, error }
 export interface ApiResponse<T> {
   success: boolean;
   data: T | null;
@@ -19,3 +18,10 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// VITE_API_BASE_URL이 없으면(.env 미설정, 백엔드 미연동) 네트워크 요청 자체를 시도하지 않는다.
+// 안 하면 Vite dev 서버가 알 수 없는 경로 요청에 index.html을 돌려줘서
+// catch로 안 빠지고 응답이 이상하게 붕 뜨는 경우가 생긴다.
+export function hasApiBase(): boolean {
+  return Boolean(import.meta.env.VITE_API_BASE_URL);
+}

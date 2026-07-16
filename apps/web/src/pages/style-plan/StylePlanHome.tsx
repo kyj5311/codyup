@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
+import PageHeader from "../../components/PageHeader";
 import { fetchRoadmap, toggleRoadmapItemPurchased } from "../../api/roadmap-api";
 import type { RoadmapData, RoadmapItem } from "../../types/roadmap";
 import type { ClothingCategory } from "../../types/closet";
@@ -43,6 +44,7 @@ export default function StylePlanHome() {
     if (!roadmap) return;
     const nextValue = !item.isPurchased;
 
+    // 낙관적 업데이트
     setRoadmap({
       ...roadmap,
       items: roadmap.items.map((i) =>
@@ -52,6 +54,7 @@ export default function StylePlanHome() {
 
     const res = await toggleRoadmapItemPurchased(item.id, nextValue);
     if (!res.success) {
+      // 실패 시 롤백
       setRoadmap((prev) =>
         prev
           ? {
@@ -81,7 +84,7 @@ export default function StylePlanHome() {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <h1 className="text-[22px] font-semibold text-ink">스타일 플랜</h1>
+      <PageHeader title="스타일 플랜" />
 
       <Card tone="cream">
         <p className="text-sm text-ink-soft">이번 달 예산</p>

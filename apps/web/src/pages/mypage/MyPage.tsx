@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Palette, Ruler, Wallet } from "lucide-react";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
+import PageHeader from "../../components/PageHeader";
 import { fetchMyProfile, updateMyProfile } from "../../api/mypage-api";
 import type { UserProfile } from "../../types/mypage";
 
@@ -51,10 +52,9 @@ export default function MyPage() {
 
   return (
     <div className="flex flex-col gap-5 p-5">
+      <PageHeader title="마이페이지" />
       <div>
-        <h1 className="text-[22px] font-semibold text-ink">
-          {profile.nickname}
-        </h1>
+        <p className="text-[15px] font-medium text-ink">{profile.nickname}</p>
         <p className="text-sm text-gray-text">{profile.email}</p>
       </div>
 

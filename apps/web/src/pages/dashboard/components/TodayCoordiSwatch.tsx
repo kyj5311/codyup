@@ -2,19 +2,37 @@ import type { TodayCoordiItem } from "../../../types/dashboard";
 
 interface TodayCoordiSwatchProps {
   items: TodayCoordiItem[];
+  /** true면 대시보드 카드 우측에 들어가는 작은 색상 블록만 렌더링 (라벨 없음) */
+  compact?: boolean;
 }
 
-/**
- * 홈 대시보드 시그니처 컴포넌트: 오늘의 추천 코디를 색상 블록으로 보여준다.
- * 온보딩의 SwatchProgress와 같은 "이어붙은 색상 블록" 시각 언어를 공유하되,
- * 여기서는 진행률이 아니라 실제 추천 아이템의 색상을 표현한다.
- */
-export default function TodayCoordiSwatch({ items }: TodayCoordiSwatchProps) {
+export default function TodayCoordiSwatch({
+  items,
+  compact = false,
+}: TodayCoordiSwatchProps) {
   if (items.length === 0) {
-    return (
+    return compact ? null : (
       <p className="text-sm text-gray-text">
         아직 추천할 코디가 없어요. 옷장을 더 채워보세요.
       </p>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="flex h-full w-full">
+        {items.map((item, index) => (
+          <div
+            key={item.id}
+            title={`${item.colorName} · ${item.label}`}
+            className={[
+              "h-full flex-1",
+              index > 0 ? "border-l border-cream" : "",
+            ].join(" ")}
+            style={{ backgroundColor: item.colorHex }}
+          />
+        ))}
+      </div>
     );
   }
 

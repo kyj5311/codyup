@@ -12,9 +12,7 @@ interface CoordiRecommendationPanelProps {
 export default function CoordiRecommendationPanel({
   closetItems,
 }: CoordiRecommendationPanelProps) {
-  const [recommendations, setRecommendations] = useState
-    CoordiRecommendation[]
-  >([]);
+  const [recommendations, setRecommendations] = useState<CoordiRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

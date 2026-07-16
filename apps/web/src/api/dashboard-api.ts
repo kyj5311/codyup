@@ -1,4 +1,4 @@
-import { apiClient, type ApiResponse } from "./api-client";
+import { apiClient, hasApiBase, type ApiResponse } from "./api-client";
 import type { DashboardSummary } from "../types/dashboard";
 
 // TODO(BE1/BE2): 실제 대시보드 요약 엔드포인트 스펙 확정되면 아래 목데이터 제거
@@ -19,9 +19,10 @@ const MOCK_DASHBOARD: DashboardSummary = {
 };
 
 /** 홈 대시보드 요약 — TODO(BE1/BE2): GET /api/dashboard-summary 스펙 확정 */
-export async function fetchDashboardSummary(): Promise
-  ApiResponse<DashboardSummary>
-> {
+export async function fetchDashboardSummary(): Promise<ApiResponse<DashboardSummary>> {
+  if (!hasApiBase()) {
+    return { success: true, data: MOCK_DASHBOARD, error: null };
+  }
   try {
     const { data } = await apiClient.get<ApiResponse<DashboardSummary>>(
       "/api/dashboard-summary",

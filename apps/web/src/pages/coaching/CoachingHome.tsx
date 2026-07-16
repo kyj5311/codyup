@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Tabs from "../../components/Tabs";
+import PageHeader from "../../components/PageHeader";
 import { fetchClosetItems } from "../../api/closet-api";
 import type { ClosetItem, ClosetColor } from "../../types/closet";
 import CoordiEvaluationPanel from "./components/CoordiEvaluationPanel";
@@ -79,7 +80,7 @@ export default function CoachingHome() {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <h1 className="text-[22px] font-semibold text-ink">코디 코칭</h1>
+      <PageHeader title="코디 코칭" />
 
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
