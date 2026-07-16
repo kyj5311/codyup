@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Sparkles } from "lucide-react";
+import { ChevronLeft, Layers, Shirt, Sparkles } from "lucide-react";
 import Card from "../../components/Card";
 import {
   fetchClosetAnalysis,
   fetchMissingClosetItems,
 } from "../../api/closet-api";
 import {
+  fetchAiClosetSummary,
+  fetchUsableCoordis,
+  type UsableCoordi,
+} from "../../api/coaching-api";
+import {
   MOCK_CLOSET_ANALYSIS,
   MOCK_MISSING_ITEMS,
 } from "../../utils/mock-closet-data";
+import { CATEGORIES } from "../../types/closet";
 import type { ClosetAnalysis, MissingClosetItem } from "../../types/closet";
 
 interface ClosetAnalysisViewProps {
@@ -25,27 +31,23 @@ export default function ClosetAnalysisView({
   const [isLoading, setIsLoading] = useState(true);
   const [isMockData, setIsMockData] = useState(false);
 
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [usableCoordis, setUsableCoordis] = useState<UsableCoordi[]>([]);
+
   useEffect(() => {
     let isMounted = true;
-    Promise.all([
-      // BE1 연동: GET /closet/analysis
-      fetchClosetAnalysis(),
-      // BE1 연동: GET /closet/missing
-      fetchMissingClosetItems(),
-    ])
+
+    // 옷장 완성도 / 부족한 아이템 — BE1 연동: GET /closet/analysis, GET /closet/missing
+    Promise.all([fetchClosetAnalysis(), fetchMissingClosetItems()])
       .then(([analysisRes, missingRes]) => {
         if (!isMounted) return;
         const analysisOk = analysisRes.success && analysisRes.data;
         const missingOk = missingRes.success && missingRes.data;
 
-        if (analysisOk) {
-          setAnalysis(analysisRes.data);
-        }
-        if (missingOk) {
-          setMissing(missingRes.data ?? []);
-        }
+        if (analysisOk) setAnalysis(analysisRes.data);
+        if (missingOk) setMissing(missingRes.data ?? []);
+
         if (!analysisOk && !missingOk) {
-          // 둘 다 실패 — 데모가 비어 보이지 않도록 목업으로 대체
           setAnalysis(MOCK_CLOSET_ANALYSIS);
           setMissing(MOCK_MISSING_ITEMS);
           setIsMockData(true);
@@ -61,6 +63,24 @@ export default function ClosetAnalysisView({
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
+
+    // AI 종합 분석 / 활용 가능한 코디 — TODO(BE2): 아직 API 없음, 준비 중 상태로 표시
+    fetchAiClosetSummary()
+      .then((res) => {
+        if (isMounted && res.success && res.data) setAiSummary(res.data.summary);
+      })
+      .catch(() => {
+        // BE2 엔드포인트 준비 전 — 화면엔 "준비 중"으로 안내
+      });
+
+    fetchUsableCoordis()
+      .then((res) => {
+        if (isMounted && res.success && res.data) setUsableCoordis(res.data);
+      })
+      .catch(() => {
+        // BE2 엔드포인트 준비 전 — 화면엔 "준비 중"으로 안내
+      });
+
     return () => {
       isMounted = false;
     };
@@ -73,8 +93,13 @@ export default function ClosetAnalysisView({
     : [];
   const maxCategoryCount = Math.max(1, ...categoryEntries.map(([, c]) => c));
 
-  const colorEntries = analysis ? Object.entries(analysis.colorCounts) : [];
-  const maxColorCount = Math.max(1, ...colorEntries.map(([, c]) => c));
+  const completenessPercent = analysis
+    ? Math.round(
+        ((CATEGORIES.length - analysis.missingCategories.length) /
+          CATEGORIES.length) *
+          100,
+      )
+    : 0;
 
   return (
     <div className="flex min-h-full flex-col pb-10">
@@ -88,7 +113,7 @@ export default function ClosetAnalysisView({
           <ChevronLeft size={22} strokeWidth={2} />
         </button>
         <h1 className="flex-1 text-center text-lg font-bold text-ink">
-          옷장 분석
+          AI 옷장 분석 결과
         </h1>
         <span className="w-[22px]" />
       </header>
@@ -104,78 +129,110 @@ export default function ClosetAnalysisView({
           옷장을 분석하는 중...
         </p>
       ) : (
-        <>
-          <Card tone="yellow" className="mt-4">
-            <p className="text-sm font-semibold text-ink-soft">
-              등록된 옷 개수
-            </p>
-            <p className="mt-1 text-3xl font-bold text-ink">
-              {analysis?.totalItems ?? 0}
-              <span className="text-base font-medium text-ink-soft">개</span>
-            </p>
-          </Card>
-
-          {categoryEntries.length > 0 && (
-            <div className="mt-6">
-              <p className="text-sm font-medium text-ink-soft">
-                카테고리별 분포
+        <div className="mt-4 flex flex-col gap-5">
+          {/* 1. 옷장 완성도 */}
+          <section>
+            <div className="flex items-center gap-1.5">
+              <Layers size={16} strokeWidth={2} className="text-ink" />
+              <p className="text-sm font-semibold text-ink-soft">
+                옷장 완성도
               </p>
-              <div className="mt-3 flex flex-col gap-2.5">
-                {categoryEntries.map(([category, count]) => (
-                  <div key={category} className="flex items-center gap-3">
-                    <span className="w-14 shrink-0 text-sm text-ink">
-                      {category}
-                    </span>
-                    <div className="h-2.5 flex-1 overflow-hidden rounded-pill bg-cream-deep">
-                      <div
-                        className="h-full rounded-pill"
-                        style={{
-                          width: `${(count / maxCategoryCount) * 100}%`,
-                          backgroundColor: CATEGORY_BAR_COLOR,
-                        }}
-                      />
-                    </div>
-                    <span className="w-6 shrink-0 text-right text-sm text-ink-soft">
-                      {count}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
-
-          {colorEntries.length > 0 && (
-            <div className="mt-6">
-              <p className="text-sm font-medium text-ink-soft">
-                색상별 분포
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {colorEntries
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([color, count]) => (
-                    <span
-                      key={color}
-                      className="rounded-2xl border border-line px-3 py-1.5 text-sm text-ink"
-                      style={{
-                        opacity: 0.5 + (count / maxColorCount) * 0.5,
-                      }}
-                    >
-                      {color} {count}
-                    </span>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {missing.length > 0 && (
-            <div className="mt-8">
-              <div className="flex items-center gap-1.5">
-                <Sparkles size={16} strokeWidth={2} className="text-ink" />
-                <p className="text-sm font-medium text-ink-soft">
-                  부족한 아이템 추천
+            <Card tone="yellow" className="mt-2">
+              <div className="flex items-baseline justify-between">
+                <p className="text-3xl font-bold text-ink">
+                  {completenessPercent}
+                  <span className="text-base font-medium text-ink-soft">%</span>
+                </p>
+                <p className="text-sm text-ink-soft">
+                  등록된 옷 {analysis?.totalItems ?? 0}개
                 </p>
               </div>
-              <div className="mt-3 flex flex-col gap-2">
+
+              {categoryEntries.length > 0 && (
+                <div className="mt-4 flex flex-col gap-2">
+                  {categoryEntries.map(([category, count]) => (
+                    <div key={category} className="flex items-center gap-3">
+                      <span className="w-14 shrink-0 text-xs text-ink">
+                        {category}
+                      </span>
+                      <div className="h-2 flex-1 overflow-hidden rounded-pill bg-cream">
+                        <div
+                          className="h-full rounded-pill"
+                          style={{
+                            width: `${(count / maxCategoryCount) * 100}%`,
+                            backgroundColor: CATEGORY_BAR_COLOR,
+                          }}
+                        />
+                      </div>
+                      <span className="w-5 shrink-0 text-right text-xs text-ink-soft">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </section>
+
+          {/* 2. AI 종합 분석 */}
+          <section>
+            <div className="flex items-center gap-1.5">
+              <Sparkles size={16} strokeWidth={2} className="text-ink" />
+              <p className="text-sm font-semibold text-ink-soft">
+                AI 종합 분석
+              </p>
+            </div>
+            <Card tone="cream" className="mt-2">
+              {aiSummary ? (
+                <p className="text-[15px] leading-relaxed text-ink">
+                  {aiSummary}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-text">
+                  AI 종합 분석은 준비 중이에요. 곧 만나보실 수 있어요.
+                </p>
+              )}
+            </Card>
+          </section>
+
+          {/* 3. 활용 가능한 코디 */}
+          <section>
+            <div className="flex items-center gap-1.5">
+              <Shirt size={16} strokeWidth={2} className="text-ink" />
+              <p className="text-sm font-semibold text-ink-soft">
+                활용 가능한 코디
+              </p>
+            </div>
+            {usableCoordis.length > 0 ? (
+              <div className="mt-2 flex flex-col gap-2">
+                {usableCoordis.map((coordi) => (
+                  <Card key={coordi.id} tone="cream">
+                    <p className="text-[15px] font-medium text-ink">
+                      {coordi.title}
+                    </p>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card tone="cream" className="mt-2">
+                <p className="text-sm text-gray-text">
+                  활용 가능한 코디 추천은 준비 중이에요. 곧 만나보실 수 있어요.
+                </p>
+              </Card>
+            )}
+          </section>
+
+          {/* 4. 부족한 아이템 */}
+          {missing.length > 0 && (
+            <section>
+              <div className="flex items-center gap-1.5">
+                <Sparkles size={16} strokeWidth={2} className="text-ink" />
+                <p className="text-sm font-semibold text-ink-soft">
+                  부족한 아이템
+                </p>
+              </div>
+              <div className="mt-2 flex flex-col gap-2">
                 {[...missing]
                   .sort((a, b) => a.priority - b.priority)
                   .map((item) => (
@@ -194,17 +251,9 @@ export default function ClosetAnalysisView({
                     </Card>
                   ))}
               </div>
-            </div>
+            </section>
           )}
-
-          {!isLoading &&
-            categoryEntries.length === 0 &&
-            missing.length === 0 && (
-              <p className="mt-10 text-center text-sm text-gray-text">
-                아직 분석할 옷이 없어요. 옷을 먼저 등록해 보세요.
-              </p>
-            )}
-        </>
+        </div>
       )}
     </div>
   );
