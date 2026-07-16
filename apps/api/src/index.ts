@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import closetRoutes from './routes/closet.routes';
 import userRoutes from './routes/user.routes';
 import roadmapRoutes from './routes/roadmap.routes';
+import { coordiEvaluationsRouter, coordiRecommendationsRouter } from './routes/coaching.routes';
 
 dotenv.config();
 
@@ -29,6 +30,14 @@ app.use('/api/purchase-roadmap', (req, res, next) => {
   (req as any).user = { id: 1 };
   next();
 });
+app.use('/api/coordi-evaluations', (req, res, next) => {
+  (req as any).user = { id: 1 };
+  next();
+});
+app.use('/api/coordi-recommendations', (req, res, next) => {
+  (req as any).user = { id: 1 };
+  next();
+});
 
 // ✅ 토큰 발급 API - /api/auth/token 으로 수정!
 app.post('/api/auth/token', (req, res) => {
@@ -48,6 +57,8 @@ app.post('/api/auth/token', (req, res) => {
 app.use('/api/closet', closetRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/purchase-roadmap', roadmapRoutes);
+app.use('/api/coordi-evaluations', coordiEvaluationsRouter);
+app.use('/api/coordi-recommendations', coordiRecommendationsRouter);
 
 // 헬스 체크
 app.get('/health', (req, res) => {
