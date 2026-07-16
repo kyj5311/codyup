@@ -9,7 +9,7 @@ import {
   fetchAiClosetSummary,
   fetchUsableCoordis,
   type UsableCoordi,
-} from "../../api/coaching-api";
+} from "../../api/closet-insight-api";
 import {
   MOCK_CLOSET_ANALYSIS,
   MOCK_MISSING_ITEMS,
