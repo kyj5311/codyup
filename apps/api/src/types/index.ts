@@ -50,3 +50,27 @@ export interface UpdateUserProfileInput {
   bodyType?: string;
   monthlyBudget?: number;
 }
+
+export type RoadmapPriority = 'high' | 'medium' | 'low';
+
+export interface RoadmapItem {
+  id: number;
+  category: string;
+  itemName: string;
+  estimatedPriceKrw: number;
+  priority: RoadmapPriority;
+  reason: string;
+  recommendedColor: { name: string; hex: string } | null;
+  isPurchased: boolean;
+}
+
+export interface RoadmapSummary {
+  monthlyBudgetKrw: number;
+  allocatedKrw: number;
+  remainingKrw: number;
+}
+
+export interface RoadmapData {
+  summary: RoadmapSummary;
+  items: RoadmapItem[];
+}

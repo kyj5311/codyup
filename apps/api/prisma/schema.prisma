@@ -54,18 +54,21 @@ model PurchaseRoadmap {
 }
 
 model RoadmapItem {
-  id             Int             @id @default(autoincrement())
-  roadmapId      Int
-  roadmap        PurchaseRoadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
-  category       String
-  reason         String?
-  estimatedPrice Int
-  priority       Int // 낮을수록 우선순위 높음
-  order          Int // 로드맵 내 표시 순서
-  isPurchased    Boolean         @default(false)
-  purchasedAt    DateTime?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                   Int             @id @default(autoincrement())
+  roadmapId            Int
+  roadmap              PurchaseRoadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  category             String
+  itemName             String
+  estimatedPriceKrw    Int
+  priority             String // "high" | "medium" | "low"
+  reason               String
+  recommendedColorName String?
+  recommendedColorHex  String?
+  isPurchased          Boolean         @default(false)
+  purchasedAt          DateTime?
+  order                Int // 로드맵 내 표시 순서
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
   @@index([roadmapId])
 }

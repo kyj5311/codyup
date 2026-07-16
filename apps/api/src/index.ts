@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import closetRoutes from './routes/closet.routes';
 import userRoutes from './routes/user.routes';
+import roadmapRoutes from './routes/roadmap.routes';
 
 dotenv.config();
 
@@ -21,6 +22,10 @@ app.use('/api/closet', (req, res, next) => {
   next();
 });
 app.use('/api/user', (req, res, next) => {
+  (req as any).user = { id: 1 };
+  next();
+});
+app.use('/api/purchase-roadmap', (req, res, next) => {
   (req as any).user = { id: 1 };
   next();
 });
@@ -42,6 +47,7 @@ app.post('/api/auth/token', (req, res) => {
 // 라우터 등록
 app.use('/api/closet', closetRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/purchase-roadmap', roadmapRoutes);
 
 // 헬스 체크
 app.get('/health', (req, res) => {
