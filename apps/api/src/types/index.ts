@@ -40,6 +40,8 @@ export interface MissingItemSuggestion {
 export interface UserProfile {
   personalColor: string | null;
   bodyType: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
   monthlyBudget: number | null;
   email: string;
   createdAt: string;
@@ -48,6 +50,8 @@ export interface UserProfile {
 export interface UpdateUserProfileInput {
   personalColor?: string;
   bodyType?: string;
+  heightCm?: number;
+  weightKg?: number;
   monthlyBudget?: number;
 }
 

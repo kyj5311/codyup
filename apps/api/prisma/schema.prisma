@@ -15,6 +15,8 @@ model User {
   passwordHash  String
   personalColor String?
   bodyType      String?
+  heightCm      Int?
+  weightKg      Int?
   monthlyBudget Int?
   closetItems   ClosetItem[]
   roadmaps      PurchaseRoadmap[]
