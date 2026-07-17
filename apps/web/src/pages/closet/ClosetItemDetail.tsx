@@ -48,7 +48,7 @@ export default function ClosetItemDetail({
           <ChevronLeft size={22} strokeWidth={2} />
         </button>
         <h1 className="flex-1 text-center text-lg font-bold text-ink">
-          옷 등록
+          옷 상세
         </h1>
         <button
           type="button"
