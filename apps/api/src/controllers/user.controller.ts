@@ -36,20 +36,24 @@ function validateUpdateBody(body: UpdateUserProfileInput): string | null {
   }
 
   if (body.monthlyBudget !== undefined) {
-    if (!Number.isInteger(body.monthlyBudget) || body.monthlyBudget < 0) {
-      return '월 예산은 0 이상의 정수여야 합니다.';
+    if (
+      !Number.isInteger(body.monthlyBudget) ||
+      body.monthlyBudget < 0 ||
+      body.monthlyBudget > 100_000_000
+    ) {
+      return '월 예산은 0원 이상 1억원 이하의 정수여야 합니다.';
     }
   }
 
   if (body.heightCm !== undefined) {
-    if (!Number.isInteger(body.heightCm) || body.heightCm <= 0) {
-      return '키는 0보다 큰 정수여야 합니다.';
+    if (!Number.isInteger(body.heightCm) || body.heightCm <= 0 || body.heightCm > 300) {
+      return '키는 0보다 크고 300 이하의 정수여야 합니다.';
     }
   }
 
   if (body.weightKg !== undefined) {
-    if (!Number.isInteger(body.weightKg) || body.weightKg <= 0) {
-      return '몸무게는 0보다 큰 정수여야 합니다.';
+    if (!Number.isInteger(body.weightKg) || body.weightKg <= 0 || body.weightKg > 300) {
+      return '몸무게는 0보다 크고 300 이하의 정수여야 합니다.';
     }
   }
 
