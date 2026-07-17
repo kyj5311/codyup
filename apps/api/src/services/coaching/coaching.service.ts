@@ -7,6 +7,127 @@ const prisma = new PrismaClient();
 
 const NEUTRAL_COLORS = ['블랙', '화이트', '그레이', '베이지', '네이비'];
 
+// 옷장 색상 팔레트 — apps/web/src/types/closet.ts의 CLOSET_COLORS와 이름/값을 맞춤
+const COLOR_HEX: Record<string, string> = {
+  화이트: '#ffffff',
+  클리어: '#f5f5f0',
+  '라이트 그레이': '#d4d1cb',
+  그레이: '#a8a49c',
+  '다크 그레이': '#6b6862',
+  블랙: '#1c1b19',
+  아이보리: '#f2ead9',
+  오트밀: '#ded2bd',
+  샌드: '#d9c7a3',
+  베이지: '#d8c3a0',
+  '다크 베이지': '#b89b73',
+  '카키 베이지': '#ac9a72',
+  '라이트 브라운': '#a97c50',
+  카멜: '#c19a6b',
+  브라운: '#8a5a3b',
+  '다크 브라운': '#5c3d28',
+  머스타드: '#d1a83b',
+  카키: '#8c8552',
+  '올리브 그린': '#6f7239',
+  '페일 핑크': '#f2d6d6',
+  '라이트 핑크': '#f0b8c2',
+  핑크: '#e893a8',
+  다크핑크: '#c85c78',
+  피치: '#f4b393',
+  '라이트 오렌지': '#f2a35c',
+  오렌지: '#e8792e',
+  '다크 오렌지': '#c15a1e',
+  브릭: '#a8442c',
+  레드: '#c62828',
+  딥레드: '#8e1f1f',
+  버건디: '#5e1f2e',
+  라벤더: '#c3b1d9',
+  퍼플: '#7c5a9e',
+  '스카이 블루': '#8fc3e0',
+  블루: '#3a6ea8',
+  '다크 블루': '#294c73',
+  네이비: '#33456b',
+  '다크 네이비': '#1f2c47',
+  라임: '#b5cc4e',
+  '라이트 옐로우': '#f2e28a',
+  옐로우: '#f0cc3c',
+  '라이트 그린': '#a8cc8c',
+  그린: '#4c6b4f',
+  '다크 그린': '#2f4530',
+  민트: '#a3d9c5',
+  연청: '#a9c2d9',
+  중청: '#5d84ab',
+  진청: '#35547a',
+  흑청: '#22334a',
+  데님: '#4a6d8c',
+  실버: '#c7c9cb',
+  골드: '#cba135',
+  로즈골드: '#d9a892',
+};
+
+interface Hsl {
+  h: number;
+  s: number;
+  l: number;
+}
+
+function hexToHsl(hex: string): Hsl {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+
+  let h = 0;
+  let s = 0;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    switch (max) {
+      case r:
+        h = ((g - b) / d) % 6;
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
+    }
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+
+  return { h, s, l };
+}
+
+// 채도가 낮거나 극단적으로 밝고/어두운 색은 "무채색 취급" — 어떤 색과도 무난하게 어울림
+function isNeutralHsl({ s, l }: Hsl): boolean {
+  return s < 0.25 || l > 0.9 || l < 0.12;
+}
+
+function hueDistance(h1: number, h2: number): number {
+  const diff = Math.abs(h1 - h2) % 360;
+  return diff > 180 ? 360 - diff : diff;
+}
+
+type ColorPairRelation = 'neutral' | 'harmonious' | 'bold' | 'clash';
+
+// 색상환(Hue) 기준: 무채색은 항상 무난, 색상끼리는 각도 차이로 유사색/보색/충돌 판단
+function classifyColorPair(nameA: string, nameB: string): ColorPairRelation | null {
+  const hexA = COLOR_HEX[nameA];
+  const hexB = COLOR_HEX[nameB];
+  if (!hexA || !hexB) return null;
+
+  const a = hexToHsl(hexA);
+  const b = hexToHsl(hexB);
+  if (isNeutralHsl(a) || isNeutralHsl(b)) return 'neutral';
+
+  const diff = hueDistance(a.h, b.h);
+  if (diff <= 30) return 'harmonious'; // 유사색
+  if (diff >= 150) return 'bold'; // 보색 — 과감하지만 의도적이면 괜찮음
+  return 'clash'; // 어중간하게 튀는 조합
+}
+
 // 퍼스널컬러 4계절 12톤별 추천 색상 — apps/web/src/types/closet.ts의 CLOSET_COLORS와 이름을 맞춤
 const TONE_COLORS: Record<string, string[]> = {
   '봄 라이트': ['피치', '라이트 옐로우', '라이트 핑크', '아이보리', '페일 핑크'],
@@ -79,12 +200,34 @@ function evaluateCombo(items: PrismaClosetItem[], personalColor: string | null):
     strengths.push('아우터까지 더해져서 스타일링이 풍성해요');
   }
 
-  if (colors.size <= 2) {
-    score += 10;
-    strengths.push('색상 조합이 깔끔하고 통일감 있어요');
-  } else if (colors.size >= 4) {
-    score -= 10;
-    improvements.push('색상이 너무 다양해서 산만해 보일 수 있어요. 1~2가지 컬러로 정리해보세요');
+  const colorList = [...colors];
+  if (colorList.length >= 2) {
+    let clashCount = 0;
+    let harmoniousCount = 0;
+    for (let i = 0; i < colorList.length; i++) {
+      for (let j = i + 1; j < colorList.length; j++) {
+        const relation = classifyColorPair(colorList[i], colorList[j]);
+        if (relation === 'clash') clashCount++;
+        else if (relation === 'harmonious') harmoniousCount++;
+      }
+    }
+
+    if (clashCount === 0) {
+      score += 10;
+      strengths.push(
+        harmoniousCount > 0
+          ? '색상끼리 색상환 기준으로도 잘 어우러져요'
+          : '무채색 위주라 어떤 조합이든 무난하게 어울려요',
+      );
+    } else {
+      score -= Math.min(15, clashCount * 8);
+      improvements.push('일부 색상 조합이 색상환에서 서로 튀는 위치라 어색해 보일 수 있어요. 무채색을 더하거나 색상 하나를 빼보세요');
+    }
+  }
+
+  if (colorList.length >= 5) {
+    score -= 5;
+    improvements.push('색상 종류가 너무 많아서 산만해 보일 수 있어요');
   }
 
   const hasNeutral = [...colors].some((c) => NEUTRAL_COLORS.includes(c));
