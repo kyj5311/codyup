@@ -27,7 +27,7 @@ export default function CoordiRecommendationPanel({
     };
   }, []);
 
-  function findItem(id: string): ClosetItem | undefined {
+  function findItem(id: number): ClosetItem | undefined {
     return closetItems.find((item) => item.id === id);
   }
 
@@ -56,7 +56,7 @@ export default function CoordiRecommendationPanel({
                 <ClosetItemThumbnail
                   key={id}
                   imageUrl={item?.imageUrl ?? null}
-                  alt={item ? `${item.color.name} ${item.subCategory}` : "옷"}
+                  alt={item ? `${item.color} ${item.category}` : "옷"}
                   className="aspect-square w-16"
                 />
               );

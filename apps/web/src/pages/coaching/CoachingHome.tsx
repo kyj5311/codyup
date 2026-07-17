@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Tabs from "../../components/Tabs";
 import PageHeader from "../../components/PageHeader";
 import { fetchClosetItems } from "../../api/closet-api";
-import type { ClosetItem, ClosetColor } from "../../types/closet";
+import type { ClosetItem } from "../../types/closet";
 import CoordiEvaluationPanel from "./components/CoordiEvaluationPanel";
 import CoordiRecommendationPanel from "./components/CoordiRecommendationPanel";
 
@@ -10,44 +10,48 @@ const TABS = ["평가", "추천"] as const;
 type CoachingTab = (typeof TABS)[number];
 
 // 백엔드 미연동 상태에서 화면을 볼 수 있도록 준비한 목 옷장 데이터
-const NAVY: ClosetColor = { name: "네이비", hex: "#33456b" };
-const BEIGE: ClosetColor = { name: "베이지", hex: "#d8c3a0" };
+// BE1 명세서 기준 ClosetItem 형태(id: number, color: string, subCategory 없음)에 맞춤
+const NOW = new Date().toISOString();
 const MOCK_CLOSET_ITEMS: ClosetItem[] = [
   {
-    id: "closet-1",
-    imageUrl: null,
+    id: 1,
+    userId: 1,
+    imageUrl: "",
     category: "상의",
-    subCategory: "니트",
-    color: NAVY,
-    seasons: ["가을", "겨울"],
-    memo: "",
+    color: "네이비",
+    isFavorite: false,
+    createdAt: NOW,
+    updatedAt: NOW,
   },
   {
-    id: "closet-2",
-    imageUrl: null,
+    id: 2,
+    userId: 1,
+    imageUrl: "",
     category: "하의",
-    subCategory: "슬랙스",
-    color: BEIGE,
-    seasons: ["봄", "가을"],
-    memo: "",
+    color: "베이지",
+    isFavorite: false,
+    createdAt: NOW,
+    updatedAt: NOW,
   },
   {
-    id: "closet-3",
-    imageUrl: null,
+    id: 3,
+    userId: 1,
+    imageUrl: "",
     category: "아우터",
-    subCategory: "코트",
-    color: NAVY,
-    seasons: ["겨울"],
-    memo: "",
+    color: "네이비",
+    isFavorite: false,
+    createdAt: NOW,
+    updatedAt: NOW,
   },
   {
-    id: "closet-4",
-    imageUrl: null,
+    id: 4,
+    userId: 1,
+    imageUrl: "",
     category: "신발",
-    subCategory: "로퍼",
-    color: BEIGE,
-    seasons: ["봄", "가을"],
-    memo: "",
+    color: "베이지",
+    isFavorite: false,
+    createdAt: NOW,
+    updatedAt: NOW,
   },
 ];
 

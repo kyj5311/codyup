@@ -13,12 +13,12 @@ interface CoordiEvaluationPanelProps {
 export default function CoordiEvaluationPanel({
   closetItems,
 }: CoordiEvaluationPanelProps) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [result, setResult] = useState<CoordiEvaluationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  function toggleSelect(id: string) {
+  function toggleSelect(id: number) {
     setResult(null);
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
@@ -55,8 +55,8 @@ export default function CoordiEvaluationPanel({
         {closetItems.map((item) => (
           <ClosetItemThumbnail
             key={item.id}
-            imageUrl={item.imageUrl}
-            alt={`${item.color.name} ${item.subCategory}`}
+            imageUrl={item.imageUrl || null}
+            alt={`${item.color} ${item.category}`}
             onClick={() => toggleSelect(item.id)}
             className={[
               "aspect-[3/4] w-full",

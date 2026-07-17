@@ -7,27 +7,22 @@ import type {
 } from "../types/coaching";
 
 // BE2 담당(로드맵·AI 코칭 축) 영역의 엔드포인트.
-// 현재 BE1 API 명세서에는 없는 기능이라 실제 경로는 BE2 확정 후 조정 필요.
-// TODO(BE2): 아래 두 엔드포인트 확정되면 경로/응답 필드만 맞추면 됨.
-
-// "코디 코칭" 탭(CoordiEvaluationPanel/CoordiRecommendationPanel)이 쓰는 실제 BE2 엔드포인트.
-// POST /api/coordi-evaluations, GET /api/coordi-recommendations — BE2가 이미 구현/검증 완료.
 const MOCK_RECOMMENDATIONS: CoordiRecommendation[] = [
   {
     id: "rec-1",
     title: "오피스 캐주얼",
-    closetItemIds: ["closet-1", "closet-3"],
+    closetItemIds: [1, 3],
     reason: "보유하신 네이비 톤 아이템으로 차분한 느낌을 냈어요.",
   },
   {
     id: "rec-2",
     title: "주말 나들이룩",
-    closetItemIds: ["closet-2", "closet-4"],
+    closetItemIds: [2, 4],
     reason: "가벼운 소재끼리 매치해 편안한 인상을 줘요.",
   },
 ];
 
-function buildMockEvaluation(closetItemIds: string[]): CoordiEvaluationResult {
+function buildMockEvaluation(closetItemIds: number[]): CoordiEvaluationResult {
   return {
     id: `eval-${Date.now()}`,
     closetItemIds,
@@ -99,9 +94,7 @@ export interface UsableCoordi {
 }
 
 /** AI 종합 분석 — TODO(BE2): 옷장 데이터를 바탕으로 한 텍스트 인사이트 */
-export async function fetchAiClosetSummary(): Promise<
-  ApiResponse<AiClosetSummary>
-> {
+export async function fetchAiClosetSummary(): Promise<ApiResponse<AiClosetSummary>> {
   const { data } = await httpClient.get<ApiResponse<AiClosetSummary>>(
     "/coaching/closet-summary",
   );
@@ -109,9 +102,7 @@ export async function fetchAiClosetSummary(): Promise<
 }
 
 /** 활용 가능한 코디 — TODO(BE2): 지금 옷장으로 조합 가능한 코디 추천 목록 */
-export async function fetchUsableCoordis(): Promise<
-  ApiResponse<UsableCoordi[]>
-> {
+export async function fetchUsableCoordis(): Promise<ApiResponse<UsableCoordi[]>> {
   const { data } = await httpClient.get<ApiResponse<UsableCoordi[]>>(
     "/coaching/usable-coordis",
   );

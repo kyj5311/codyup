@@ -20,7 +20,6 @@ const MOCK_PROFILE: UserProfile = {
   personalColorResult: {
     season: "가을웜",
     confidence: 0.86,
-    recommendedColors: ["#a8622f", "#8a5a3b", "#d8c3a0"],
   },
   joinedAt: "2026-03-02T09:00:00+09:00",
 };
@@ -39,7 +38,7 @@ function fromBe1Profile(raw: Be1UserProfile): UserProfile {
     },
     budget: { monthlyBudgetKrw: raw.monthlyBudget },
     personalColorResult: raw.personalColor
-      ? { season: raw.personalColor, confidence: 1, recommendedColors: [] }
+      ? { season: raw.personalColor, confidence: 1 }
       : null,
     joinedAt: raw.createdAt,
   };
@@ -54,7 +53,9 @@ export async function fetchMyProfile(): Promise<ApiResponse<UserProfile>> {
     const { data } = await apiClient.get<ApiResponse<Be1UserProfile>>(
       "/user/profile",
     );
-    if (!data.success || !data.data) return data as ApiResponse<UserProfile>;
+    if (!data.success || !data.data) {
+      return { success: false, data: null, error: data.error };
+    }
     return { success: true, data: fromBe1Profile(data.data), error: null };
   } catch (err) {
     console.warn("[mypage-api] 백엔드 미연동 - 목데이터로 대체", err);
@@ -85,7 +86,9 @@ export async function updateMyProfile(
           : {}),
       },
     );
-    if (!data.success || !data.data) return data as ApiResponse<UserProfile>;
+    if (!data.success || !data.data) {
+      return { success: false, data: null, error: data.error };
+    }
     return { success: true, data: fromBe1Profile(data.data), error: null };
   } catch (err) {
     console.warn("[mypage-api] 백엔드 미연동 - 목데이터로 처리", err);
