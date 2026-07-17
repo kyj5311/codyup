@@ -17,7 +17,7 @@ export default function ClosetItemThumbnail({
   alt,
   onClick,
   onDelete,
-  className = "aspect-[3/4] w-full",
+  className = "aspect-square w-full",
 }: ClosetItemThumbnailProps) {
   const imageNode = imageUrl ? (
     <img src={imageUrl} alt={alt} className="h-full w-full object-cover" />

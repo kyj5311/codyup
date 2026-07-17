@@ -125,7 +125,9 @@ export default function InitialClosetStep({
               <p className="text-[15px] font-medium text-ink">
                 사진을 업로드해 주세요
               </p>
-              <p className="mt-1 text-xs text-gray-text">JPG, PNG / 최대 30MB</p>
+              <p className="mt-1 text-xs text-gray-text">
+                JPG, PNG / 최대 30MB · 1:1 비율 이미지를 권장해요
+              </p>
             </>
           )}
         </Card>

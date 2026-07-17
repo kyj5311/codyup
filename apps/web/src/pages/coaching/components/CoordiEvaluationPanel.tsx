@@ -59,7 +59,7 @@ export default function CoordiEvaluationPanel({
             alt={`${item.color} ${item.category}`}
             onClick={() => toggleSelect(item.id)}
             className={[
-              "aspect-[3/4] w-full",
+              "aspect-square w-full",
               selectedIds.includes(item.id)
                 ? "ring-2 ring-ink ring-offset-2 ring-offset-cream"
                 : "",
