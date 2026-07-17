@@ -344,15 +344,90 @@ export class CoachingService {
     }));
     scored.sort((a, b) => b.score - a.score);
 
-    const top3 = scored.slice(0, 3);
+    // 상위 점수만 뽑으면 상의+하의 조합이 똑같고 아우터/신발만 다른 경우가 많아
+    // 추천 3개가 거의 똑같아 보임 — 상의·하의 조합이 겹치지 않는 것 위주로 다양성 확보
+    const top3: typeof scored = [];
+    const usedPairs = new Set<string>();
+    for (const entry of scored) {
+      const topItem = entry.combo.find((i) => i.category === '상의');
+      const bottomItem = entry.combo.find((i) => i.category === '하의');
+      const pairKey = `${topItem?.id}-${bottomItem?.id}`;
+      if (usedPairs.has(pairKey)) continue;
+      usedPairs.add(pairKey);
+      top3.push(entry);
+      if (top3.length === 3) break;
+    }
+    for (const entry of scored) {
+      if (top3.length === 3) break;
+      if (!top3.includes(entry)) top3.push(entry);
+    }
+
     return top3.map((entry, index) => {
-      const primaryColor = entry.combo[0]?.color ?? '';
+      const topItem = entry.combo.find((i) => i.category === '상의');
+      const bottomItem = entry.combo.find((i) => i.category === '하의');
+      const title =
+        topItem && bottomItem
+          ? `${topItem.color}·${bottomItem.color} 코디`
+          : `추천 코디 ${index + 1}`;
+      const composition = entry.combo.map((i) => `${i.category} ${i.color}`).join(' + ');
+
       return {
         id: `rec-${Date.now()}-${index}`,
-        title: primaryColor ? `${primaryColor} 톤 코디` : `추천 코디 ${index + 1}`,
+        title,
         closetItemIds: entry.combo.map((i) => i.id),
-        reason: entry.strengths[0] ?? entry.summary,
+        reason: `${composition} · ${entry.strengths[0] ?? entry.summary}`,
       };
     });
+  }
+
+  // AI 종합 분석 — 옷장 카테고리/색상 분포와 퍼스널컬러를 바탕으로 한 텍스트 인사이트
+  async getClosetSummary(userId: number): Promise<{ summary: string }> {
+    const [user, items] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      prisma.closetItem.findMany({ where: { userId } }),
+    ]);
+
+    if (items.length === 0) {
+      return { summary: '아직 등록된 옷이 없어요. 옷을 몇 벌 등록하면 AI가 옷장을 분석해드려요.' };
+    }
+
+    const categoryCounts: Record<string, number> = {};
+    const colorCounts: Record<string, number> = {};
+    items.forEach((item) => {
+      categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
+      colorCounts[item.color] = (colorCounts[item.color] || 0) + 1;
+    });
+
+    const [topCategory] = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
+    const [topColor] = Object.entries(colorCounts).sort((a, b) => b[1] - a[1]);
+    const requiredCategories = ['상의', '하의', '아우터', '신발'];
+    const missing = requiredCategories.filter((c) => !categoryCounts[c]);
+
+    const parts: string[] = [];
+    parts.push(`옷장에 총 ${items.length}벌이 등록되어 있고, ${topCategory[0]}(${topCategory[1]}개)이(가) 가장 많아요.`);
+    parts.push(`${topColor[0]} 계열을 자주 선택하시네요.`);
+
+    if (missing.length > 0) {
+      parts.push(`${missing.join('·')}이(가) 부족해서 코디 조합의 폭이 좁을 수 있어요.`);
+    }
+
+    if (user?.personalColor) {
+      const tone = resolveToneColors(user.personalColor);
+      if (tone) {
+        parts.push(`퍼스널컬러(${tone.label})를 고려하면 ${tone.colors.slice(0, 3).join('·')} 계열을 더하면 더 잘 어울려요.`);
+      }
+    }
+
+    return { summary: parts.join(' ') };
+  }
+
+  // 활용 가능한 코디 — 기존 코디 추천 로직을 재사용해 화면용 요약 형태로 변환
+  async getUsableCoordis(userId: number): Promise<{ id: number; title: string; itemIds: number[] }[]> {
+    const recommendations = await this.getRecommendations(userId);
+    return recommendations.map((rec, index) => ({
+      id: index + 1,
+      title: rec.title,
+      itemIds: rec.closetItemIds,
+    }));
   }
 }

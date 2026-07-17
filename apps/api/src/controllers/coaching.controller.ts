@@ -87,4 +87,46 @@ export class CoachingController {
       } as ApiResponse);
     }
   }
+
+  async getClosetSummary(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = getUserId(req, res);
+      if (userId === null) return;
+
+      const result = await coachingService.getClosetSummary(userId);
+      res.status(200).json({
+        success: true,
+        data: result,
+        error: null,
+      } as ApiResponse);
+    } catch (error) {
+      console.error('AI 종합 분석 오류:', error);
+      res.status(500).json({
+        success: false,
+        data: null,
+        error: { code: 'EVAL_003', message: 'AI 종합 분석에 실패했습니다.' },
+      } as ApiResponse);
+    }
+  }
+
+  async getUsableCoordis(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = getUserId(req, res);
+      if (userId === null) return;
+
+      const result = await coachingService.getUsableCoordis(userId);
+      res.status(200).json({
+        success: true,
+        data: result,
+        error: null,
+      } as ApiResponse);
+    } catch (error) {
+      console.error('활용 가능한 코디 오류:', error);
+      res.status(500).json({
+        success: false,
+        data: null,
+        error: { code: 'EVAL_003', message: '활용 가능한 코디 조회에 실패했습니다.' },
+      } as ApiResponse);
+    }
+  }
 }
