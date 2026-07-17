@@ -10,6 +10,7 @@ import {
   buildPersonalColorLabel,
   type OnboardingState,
   type OnboardingStep,
+  type PersonalColorTone,
 } from "../../types/onboarding";
 
 const INITIAL_STATE: OnboardingState = {
@@ -27,15 +28,14 @@ interface OnboardingFlowProps {
 export default function OnboardingFlow({ onFinish }: OnboardingFlowProps) {
   const [step, setStep] = useState<OnboardingStep>("intro");
   const [state, setState] = useState<OnboardingState>(INITIAL_STATE);
-  const [manualTone, setManualTone] = useState<"웜톤" | "쿨톤" | null>(null);
+  const [manualTone, setManualTone] = useState<PersonalColorTone | null>(null);
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[480px] bg-cream px-6 pb-10 pt-8">
-      {step !== "intro" && (
-        <div className="mb-6">
-          <SwatchProgress current={step} />
-        </div>
-      )}
+      {/* 소개 단계 포함 전체 5단계에서 항상 진행바를 보여줌 (이전엔 intro에서 숨겨서 "1/5"가 안 보였음) */}
+      <div className="mb-6">
+        <SwatchProgress current={step} />
+      </div>
 
       {step === "intro" && (
         <IntroSlide onComplete={() => setStep("personal-color")} />
@@ -78,6 +78,8 @@ export default function OnboardingFlow({ onFinish }: OnboardingFlowProps) {
                     manualTone,
                   ),
                   bodyType: nextState.bodyInfo.bodyShape,
+                  heightCm: nextState.bodyInfo.heightCm ?? undefined,
+                  weightKg: nextState.bodyInfo.weightKg ?? undefined,
                   monthlyBudget: budget.monthlyBudgetKrw,
                 });
               } catch {
