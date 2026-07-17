@@ -55,7 +55,7 @@ export async function evaluateCoordi(
   }
   try {
     const { data } = await apiClient.post<ApiResponse<CoordiEvaluationResult>>(
-      "/api/coordi-evaluations",
+      "/coordi-evaluations",
       request,
     );
     return data;
@@ -79,7 +79,7 @@ export async function fetchCoordiRecommendations(): Promise<ApiResponse<CoordiRe
   }
   try {
     const { data } = await apiClient.get<ApiResponse<CoordiRecommendation[]>>(
-      "/api/coordi-recommendations",
+      "/coordi-recommendations",
     );
     return data;
   } catch (err) {

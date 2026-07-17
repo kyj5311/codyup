@@ -59,7 +59,7 @@ export async function fetchRoadmap(): Promise<ApiResponse<RoadmapData>> {
   }
   try {
     const { data } =
-      await apiClient.get<ApiResponse<RoadmapData>>("/api/purchase-roadmap");
+      await apiClient.get<ApiResponse<RoadmapData>>("/purchase-roadmap");
     return data;
   } catch (err) {
     console.warn("[roadmap-api] 백엔드 미연동 - 목데이터로 대체", err);
@@ -85,7 +85,7 @@ export async function toggleRoadmapItemPurchased(
   }
   try {
     const { data } = await apiClient.patch<ApiResponse<RoadmapItem>>(
-      `/api/purchase-roadmap/${itemId}`,
+      `/purchase-roadmap/${itemId}`,
       { isPurchased },
     );
     return data;

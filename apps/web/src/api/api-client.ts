@@ -6,8 +6,10 @@ export interface ApiResponse<T> {
   error: { code: string; message: string } | null;
 }
 
+// http-client.ts(FE1)와 동일한 baseURL 규약으로 통일 (/api 포함).
+// 호출부는 "/api/..."가 아니라 "/purchase-roadmap"처럼 /api 없이 경로만 씀.
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api",
   headers: { "Content-Type": "application/json" },
 });
 

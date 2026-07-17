@@ -23,7 +23,7 @@ export async function fetchMyProfile(): Promise<ApiResponse<UserProfile>> {
   }
   try {
     const { data } =
-      await apiClient.get<ApiResponse<UserProfile>>("/api/users/me");
+      await apiClient.get<ApiResponse<UserProfile>>("/users/me");
     return data;
   } catch (err) {
     console.warn("[mypage-api] 백엔드 미연동 - 목데이터로 대체", err);
@@ -46,7 +46,7 @@ export async function updateMyProfile(
   }
   try {
     const { data } = await apiClient.patch<ApiResponse<UserProfile>>(
-      "/api/users/me",
+      "/users/me",
       patch,
     );
     return data;

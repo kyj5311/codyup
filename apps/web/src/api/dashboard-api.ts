@@ -25,7 +25,7 @@ export async function fetchDashboardSummary(): Promise<ApiResponse<DashboardSumm
   }
   try {
     const { data } = await apiClient.get<ApiResponse<DashboardSummary>>(
-      "/api/dashboard-summary",
+      "/dashboard-summary",
     );
     return data;
   } catch (err) {
