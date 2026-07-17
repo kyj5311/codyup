@@ -6,8 +6,47 @@ import { CoordiEvaluationResult, CoordiRecommendation } from '../../types';
 const prisma = new PrismaClient();
 
 const NEUTRAL_COLORS = ['블랙', '화이트', '그레이', '베이지', '네이비'];
-const WARM_COLORS = ['베이지', '브라운'];
-const COOL_COLORS = ['네이비', '그린', '그레이'];
+
+// 퍼스널컬러 4계절 12톤별 추천 색상 — apps/web/src/types/closet.ts의 CLOSET_COLORS와 이름을 맞춤
+const TONE_COLORS: Record<string, string[]> = {
+  '봄 라이트': ['피치', '라이트 옐로우', '라이트 핑크', '아이보리', '페일 핑크'],
+  '봄 브라이트': ['오렌지', '레드', '라이트 그린', '옐로우', '라이트 오렌지'],
+  '봄 트루': ['오렌지', '레드', '옐로우', '카멜', '라이트 오렌지'],
+  '여름 라이트': ['스카이 블루', '라벤더', '라이트 핑크', '페일 핑크'],
+  '여름 뮤트': ['다크핑크', '민트', '라이트 그레이', '그레이'],
+  '여름 브라이트': ['다크핑크', '핑크', '블루', '퍼플'],
+  '가을 뮤트': ['베이지', '샌드', '카키', '올리브 그린', '다크 베이지'],
+  '가을 딥': ['버건디', '다크 브라운', '다크 그린', '딥레드'],
+  '가을 스트롱': ['브릭', '오렌지', '머스타드', '카멜'],
+  '겨울 브라이트': ['다크핑크', '블루', '옐로우', '퍼플'],
+  '겨울 딥': ['다크 네이비', '버건디', '딥레드', '다크 브라운'],
+  '겨울 클리어': ['화이트', '블랙', '실버'],
+};
+
+// 세부 12톤을 알 수 없을 때(예전 데이터의 "웜톤"/"쿨톤"만 있는 경우 등) 대비한 계절/톤 단위 폴백
+const SEASON_FALLBACK_COLORS: Record<string, string[]> = {
+  봄: TONE_COLORS['봄 트루'],
+  여름: TONE_COLORS['여름 라이트'],
+  가을: TONE_COLORS['가을 뮤트'],
+  겨울: TONE_COLORS['겨울 브라이트'],
+};
+const WARM_FALLBACK_COLORS = [...TONE_COLORS['봄 트루'], ...TONE_COLORS['가을 뮤트']];
+const COOL_FALLBACK_COLORS = [...TONE_COLORS['여름 라이트'], ...TONE_COLORS['겨울 브라이트']];
+
+function resolveToneColors(personalColor: string): { label: string; colors: string[] } | null {
+  const matchedTone = Object.keys(TONE_COLORS).find((tone) => personalColor.includes(tone));
+  if (matchedTone) return { label: matchedTone, colors: TONE_COLORS[matchedTone] };
+
+  const matchedSeason = Object.keys(SEASON_FALLBACK_COLORS).find((season) =>
+    personalColor.includes(season),
+  );
+  if (matchedSeason) return { label: matchedSeason, colors: SEASON_FALLBACK_COLORS[matchedSeason] };
+
+  if (personalColor.includes('웜')) return { label: '웜톤', colors: WARM_FALLBACK_COLORS };
+  if (personalColor.includes('쿨')) return { label: '쿨톤', colors: COOL_FALLBACK_COLORS };
+
+  return null;
+}
 
 interface ScoredCombo {
   score: number;
@@ -56,23 +95,17 @@ function evaluateCombo(items: PrismaClosetItem[], personalColor: string | null):
   }
 
   if (personalColor) {
-    const isWarm = personalColor.includes('웜');
-    const isCool = personalColor.includes('쿨');
-    const warmMatch = [...colors].some((c) => WARM_COLORS.includes(c));
-    const coolMatch = [...colors].some((c) => COOL_COLORS.includes(c));
-
-    if (isWarm && warmMatch) {
-      score += 10;
-      strengths.push('퍼스널컬러(웜톤)와 잘 어울리는 따뜻한 컬러가 포함됐어요');
-    } else if (isWarm && !warmMatch) {
-      improvements.push('웜톤이시라면 베이지·브라운 계열을 더하면 얼굴이 화사해 보여요');
-    }
-
-    if (isCool && coolMatch) {
-      score += 10;
-      strengths.push('퍼스널컬러(쿨톤)와 잘 어울리는 차분한 컬러가 포함됐어요');
-    } else if (isCool && !coolMatch) {
-      improvements.push('쿨톤이시라면 네이비·그레이 계열을 더하면 톤이 더 살아나요');
+    const tone = resolveToneColors(personalColor);
+    if (tone) {
+      const toneMatch = [...colors].some((c) => tone.colors.includes(c));
+      if (toneMatch) {
+        score += 10;
+        strengths.push(`퍼스널컬러(${tone.label})와 잘 어울리는 컬러가 포함됐어요`);
+      } else {
+        improvements.push(
+          `퍼스널컬러(${tone.label})에 어울리는 ${tone.colors.slice(0, 3).join('·')} 계열을 더하면 더 화사해 보여요`,
+        );
+      }
     }
   }
 

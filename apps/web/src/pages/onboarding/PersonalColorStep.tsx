@@ -3,12 +3,16 @@ import Button from "../../components/Button";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
 import { requestPersonalColorDiagnosis } from "../../api/onboarding-api";
-import type { PersonalColorResult } from "../../types/onboarding";
+import {
+  PERSONAL_COLOR_SEASONS,
+  type PersonalColorResult,
+  type PersonalColorTone,
+} from "../../types/onboarding";
 
 interface PersonalColorStepProps {
   onComplete: (
     result: PersonalColorResult | null,
-    manualTone: "웜톤" | "쿨톤" | null,
+    manualTone: PersonalColorTone | null,
   ) => void;
   onBack: () => void;
 }
@@ -24,7 +28,7 @@ export default function PersonalColorStep({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<DiagnosisStatus>("idle");
   const [result, setResult] = useState<PersonalColorResult | null>(null);
-  const [manualTone, setManualTone] = useState<"웜톤" | "쿨톤" | null>(null);
+  const [manualTone, setManualTone] = useState<PersonalColorTone | null>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -51,7 +55,7 @@ export default function PersonalColorStep({
     }
   }
 
-  function handleSkipWithManualTone(tone: "웜톤" | "쿨톤") {
+  function handleSkipWithManualTone(tone: PersonalColorTone) {
     setManualTone(tone);
     setResult(null);
     setStatus("idle");
@@ -137,19 +141,25 @@ export default function PersonalColorStep({
           <p className="text-sm font-medium text-ink-soft">
             사진 없이 직접 선택할래요
           </p>
-          <div className="mt-3 flex gap-2">
-            <Chip
-              selected={manualTone === "웜톤"}
-              onClick={() => handleSkipWithManualTone("웜톤")}
-            >
-              웜톤
-            </Chip>
-            <Chip
-              selected={manualTone === "쿨톤"}
-              onClick={() => handleSkipWithManualTone("쿨톤")}
-            >
-              쿨톤
-            </Chip>
+          <div className="mt-3 flex flex-col gap-3">
+            {PERSONAL_COLOR_SEASONS.map((group) => (
+              <div key={group.season}>
+                <p className="text-xs font-medium text-gray-text">
+                  {group.season}
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {group.tones.map((tone) => (
+                    <Chip
+                      key={tone}
+                      selected={manualTone === tone}
+                      onClick={() => handleSkipWithManualTone(tone)}
+                    >
+                      {tone}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

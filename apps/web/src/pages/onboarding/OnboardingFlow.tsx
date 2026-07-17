@@ -10,6 +10,7 @@ import {
   buildPersonalColorLabel,
   type OnboardingState,
   type OnboardingStep,
+  type PersonalColorTone,
 } from "../../types/onboarding";
 
 const INITIAL_STATE: OnboardingState = {
@@ -27,7 +28,7 @@ interface OnboardingFlowProps {
 export default function OnboardingFlow({ onFinish }: OnboardingFlowProps) {
   const [step, setStep] = useState<OnboardingStep>("intro");
   const [state, setState] = useState<OnboardingState>(INITIAL_STATE);
-  const [manualTone, setManualTone] = useState<"웜톤" | "쿨톤" | null>(null);
+  const [manualTone, setManualTone] = useState<PersonalColorTone | null>(null);
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[480px] bg-cream px-6 pb-10 pt-8">

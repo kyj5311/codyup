@@ -18,14 +18,67 @@ export interface ClosetColorOption {
 }
 
 // UI 색상 스와치용 프리셋 — 서버에는 name(string)만 전송
+// 퍼스널컬러 12톤 추천과 실제 매칭이 되도록 세분화된 팔레트로 확장
 export const CLOSET_COLORS: ClosetColorOption[] = [
-  { name: "블랙", hex: "#1c1b19" },
+  // 무채색 및 기본 톤
   { name: "화이트", hex: "#ffffff" },
+  { name: "클리어", hex: "#f5f5f0" },
+  { name: "라이트 그레이", hex: "#d4d1cb" },
   { name: "그레이", hex: "#a8a49c" },
+  { name: "다크 그레이", hex: "#6b6862" },
+  { name: "블랙", hex: "#1c1b19" },
+  { name: "아이보리", hex: "#f2ead9" },
+  { name: "오트밀", hex: "#ded2bd" },
+  { name: "샌드", hex: "#d9c7a3" },
   { name: "베이지", hex: "#d8c3a0" },
+  { name: "다크 베이지", hex: "#b89b73" },
+  { name: "카키 베이지", hex: "#ac9a72" },
+  // 브라운 및 웜 톤
+  { name: "라이트 브라운", hex: "#a97c50" },
+  { name: "카멜", hex: "#c19a6b" },
   { name: "브라운", hex: "#8a5a3b" },
+  { name: "다크 브라운", hex: "#5c3d28" },
+  { name: "머스타드", hex: "#d1a83b" },
+  { name: "카키", hex: "#8c8552" },
+  { name: "올리브 그린", hex: "#6f7239" },
+  // 레드, 핑크 및 오렌지 톤
+  { name: "페일 핑크", hex: "#f2d6d6" },
+  { name: "라이트 핑크", hex: "#f0b8c2" },
+  { name: "핑크", hex: "#e893a8" },
+  { name: "다크핑크", hex: "#c85c78" },
+  { name: "피치", hex: "#f4b393" },
+  { name: "라이트 오렌지", hex: "#f2a35c" },
+  { name: "오렌지", hex: "#e8792e" },
+  { name: "다크 오렌지", hex: "#c15a1e" },
+  { name: "브릭", hex: "#a8442c" },
+  { name: "레드", hex: "#c62828" },
+  { name: "딥레드", hex: "#8e1f1f" },
+  { name: "버건디", hex: "#5e1f2e" },
+  // 퍼플 및 블루 톤
+  { name: "라벤더", hex: "#c3b1d9" },
+  { name: "퍼플", hex: "#7c5a9e" },
+  { name: "스카이 블루", hex: "#8fc3e0" },
+  { name: "블루", hex: "#3a6ea8" },
+  { name: "다크 블루", hex: "#294c73" },
   { name: "네이비", hex: "#33456b" },
+  { name: "다크 네이비", hex: "#1f2c47" },
+  // 그린 및 옐로우 톤
+  { name: "라임", hex: "#b5cc4e" },
+  { name: "라이트 옐로우", hex: "#f2e28a" },
+  { name: "옐로우", hex: "#f0cc3c" },
+  { name: "라이트 그린", hex: "#a8cc8c" },
   { name: "그린", hex: "#4c6b4f" },
+  { name: "다크 그린", hex: "#2f4530" },
+  { name: "민트", hex: "#a3d9c5" },
+  // 데님 및 메탈, 기타
+  { name: "연청", hex: "#a9c2d9" },
+  { name: "중청", hex: "#5d84ab" },
+  { name: "진청", hex: "#35547a" },
+  { name: "흑청", hex: "#22334a" },
+  { name: "데님", hex: "#4a6d8c" },
+  { name: "실버", hex: "#c7c9cb" },
+  { name: "골드", hex: "#cba135" },
+  { name: "로즈골드", hex: "#d9a892" },
 ];
 
 // GET /closet, GET /closet/:id 응답 데이터 형태

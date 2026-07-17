@@ -10,11 +10,38 @@ export type BodyShape =
   | "직사각형"
   | "역삼각형";
 
+// 퍼스널컬러 4계절 12톤 분류
+export type PersonalColorTone =
+  | "봄 라이트"
+  | "봄 브라이트"
+  | "봄 트루"
+  | "여름 라이트"
+  | "여름 뮤트"
+  | "여름 브라이트"
+  | "가을 뮤트"
+  | "가을 딥"
+  | "가을 스트롱"
+  | "겨울 브라이트"
+  | "겨울 딥"
+  | "겨울 클리어";
+
+export interface PersonalColorSeasonGroup {
+  season: string;
+  tones: PersonalColorTone[];
+}
+
+export const PERSONAL_COLOR_SEASONS: PersonalColorSeasonGroup[] = [
+  { season: "봄 웜톤", tones: ["봄 라이트", "봄 브라이트", "봄 트루"] },
+  { season: "여름 쿨톤", tones: ["여름 라이트", "여름 뮤트", "여름 브라이트"] },
+  { season: "가을 웜톤", tones: ["가을 뮤트", "가을 딥", "가을 스트롱"] },
+  { season: "겨울 쿨톤", tones: ["겨울 브라이트", "겨울 딥", "겨울 클리어"] },
+];
+
 // 퍼스널컬러 진단 UI(FE1) — 실제 판별 로직/모델 연동은 BE1 담당
 export interface PersonalColorInput {
   uploadedImageFile: File | null;
   // 사용자가 사진 없이 직접 선택하는 경우를 위한 폴백 선택지
-  selfSelectedTone: "웜톤" | "쿨톤" | null;
+  selfSelectedTone: PersonalColorTone | null;
 }
 
 // 퍼스널컬러 진단 API 응답 (엔드포인트는 BE1 명세서에 아직 없음, 추후 확정)
@@ -54,16 +81,15 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 /**
  * PUT /user/profile로 보낼 personalColor 문자열 조합.
- * BE1 응답 예시가 "가을 웜 뮤트"처럼 공백으로 구분된 문자열이라,
- * 진단 결과("가을웜")나 수동 선택("웜톤")을 최대한 비슷한 형태로 변환.
+ * 수동 선택은 "봄 라이트"처럼 12톤 라벨을 그대로 사용하고,
+ * (아직 없는) 진단 API 결과는 그 계절/톤 문자열을 그대로 사용.
  */
 export function buildPersonalColorLabel(
   result: PersonalColorResult | null,
-  manualTone: "웜톤" | "쿨톤" | null,
+  manualTone: PersonalColorTone | null,
 ): string {
   if (result) {
-    // "가을웜" -> "가을 웜" 처럼 계절/톤 사이에 공백 삽입
-    return result.season.replace(/(웜|쿨)$/, " $1");
+    return result.season;
   }
   return manualTone ?? "";
 }
