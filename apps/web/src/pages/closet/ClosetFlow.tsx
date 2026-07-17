@@ -3,6 +3,7 @@ import ClosetHome from "./ClosetHome";
 import ClosetItemForm from "./ClosetItemForm";
 import ClosetItemDetail from "./ClosetItemDetail";
 import ClosetAnalysisView from "./ClosetAnalysis";
+import Toast from "../../components/Toast";
 import {
   createClosetItem,
   deleteClosetItem,
@@ -28,6 +29,7 @@ export default function ClosetFlow({ initialView = "list" }: ClosetFlowProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isMockData, setIsMockData] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // App.tsx에서 대시보드 진입 경로가 바뀔 때마다(list <-> analysis) 반영
   useEffect(() => {
@@ -101,7 +103,8 @@ export default function ClosetFlow({ initialView = "list" }: ClosetFlowProps) {
         setItems((prev) =>
           prev.map((item) => (item.id === id ? updated : item)),
         );
-        setView("detail");
+        setToastMessage("수정 완료!");
+        setView("list");
       } else {
         setErrorMessage(res.error?.message ?? "수정에 실패했어요.");
       }
@@ -171,6 +174,8 @@ export default function ClosetFlow({ initialView = "list" }: ClosetFlowProps) {
           onDelete={handleDelete}
         />
       )}
+
+      <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />
     </div>
   );
 }
