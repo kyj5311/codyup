@@ -5,7 +5,21 @@ import { CoordiEvaluationResult, CoordiRecommendation } from '../../types';
 
 const prisma = new PrismaClient();
 
-const NEUTRAL_COLORS = ['블랙', '화이트', '그레이', '베이지', '네이비'];
+// 팔레트의 "무채색/기본" 그룹과 동일한 기준 — 색상 궁합(isNeutralHsl) 판정과 통일
+const NEUTRAL_COLORS = [
+  '화이트',
+  '클리어',
+  '라이트 그레이',
+  '그레이',
+  '다크 그레이',
+  '블랙',
+  '아이보리',
+  '오트밀',
+  '샌드',
+  '베이지',
+  '다크 베이지',
+  '카키 베이지',
+];
 
 // 옷장 색상 팔레트 — apps/web/src/types/closet.ts의 CLOSET_COLORS와 이름/값을 맞춤
 const COLOR_HEX: Record<string, string> = {
