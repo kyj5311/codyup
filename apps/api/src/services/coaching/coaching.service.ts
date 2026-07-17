@@ -16,23 +16,28 @@ interface ScoredCombo {
   improvements: string[];
 }
 
+// 코디의 기본 골격 — 상의·하의·신발을 모두 갖춰야 기본 점수(60점)를 다 받을 수 있음
+const CORE_CATEGORIES = ['상의', '하의', '신발'];
+
 function evaluateCombo(items: PrismaClosetItem[], personalColor: string | null): ScoredCombo {
   const categories = new Set(items.map((i) => i.category));
   const colors = new Set(items.map((i) => i.color));
   const strengths: string[] = [];
   const improvements: string[] = [];
-  let score = 60;
 
-  if (categories.has('상의') && categories.has('하의')) {
-    score += 15;
-    strengths.push('상의와 하의 조합이 기본기를 잘 갖췄어요');
+  const presentCoreCount = CORE_CATEGORIES.filter((c) => categories.has(c)).length;
+  let score = Math.round((presentCoreCount / CORE_CATEGORIES.length) * 60);
+
+  if (presentCoreCount === CORE_CATEGORIES.length) {
+    strengths.push('상의·하의·신발을 모두 갖춘 완성도 높은 코디예요');
   } else {
-    improvements.push('상의와 하의를 함께 매치하면 더 완성도 있는 코디가 돼요');
+    const missingCore = CORE_CATEGORIES.filter((c) => !categories.has(c));
+    improvements.push(`${missingCore.join('·')}이(가) 빠져 있어요. 셋을 모두 갖추면 기본 점수가 올라가요`);
   }
 
-  if (categories.has('아우터') || categories.has('신발')) {
+  if (categories.has('아우터')) {
     score += 10;
-    strengths.push('아우터/신발까지 포함되어 완성도가 높아요');
+    strengths.push('아우터까지 더해져서 스타일링이 풍성해요');
   }
 
   if (colors.size <= 2) {
