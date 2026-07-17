@@ -40,7 +40,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-screen flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
         {screen === "home" && (
           <DashboardHome

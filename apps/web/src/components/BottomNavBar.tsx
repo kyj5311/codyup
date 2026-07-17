@@ -10,9 +10,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { key: "home", icon: Home, label: "홈" },
   { key: "closet", icon: Shirt, label: "내 옷장" },
   { key: "style-plan", icon: ShoppingBag, label: "스타일 플랜" },
+  { key: "home", icon: Home, label: "홈" },
   { key: "coaching", icon: Search, label: "코디 코칭" },
   { key: "mypage", icon: User, label: "마이페이지" },
 ];
