@@ -24,6 +24,7 @@ export default function MyPage() {
   // 예산
   const [budgetInput, setBudgetInput] = useState("");
   const [isSavingBudget, setIsSavingBudget] = useState(false);
+  const [budgetError, setBudgetError] = useState<string | null>(null);
 
   // 닉네임 + 체형 정보
   const [nicknameInput, setNicknameInput] = useState("");
@@ -31,6 +32,7 @@ export default function MyPage() {
   const [weightInput, setWeightInput] = useState("");
   const [bodyShapeInput, setBodyShapeInput] = useState<BodyShape | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -61,15 +63,21 @@ export default function MyPage() {
     if (!monthlyBudgetKrw) return;
 
     setIsSavingBudget(true);
+    setBudgetError(null);
     const res = await updateMyProfile({ budget: { monthlyBudgetKrw } });
     setIsSavingBudget(false);
-    if (res.success && res.data) applyProfileToForm(res.data);
+    if (res.success && res.data) {
+      applyProfileToForm(res.data);
+    } else {
+      setBudgetError(res.error?.message ?? "저장에 실패했어요. 다시 시도해 주세요.");
+    }
   }
 
   async function handleSaveProfile() {
     if (!profile) return;
 
     setIsSavingProfile(true);
+    setProfileError(null);
     const res = await updateMyProfile({
       nickname: nicknameInput.trim() || undefined,
       bodyInfo: {
@@ -79,7 +87,11 @@ export default function MyPage() {
       },
     });
     setIsSavingProfile(false);
-    if (res.success && res.data) applyProfileToForm(res.data);
+    if (res.success && res.data) {
+      applyProfileToForm(res.data);
+    } else {
+      setProfileError(res.error?.message ?? "저장에 실패했어요. 다시 시도해 주세요.");
+    }
   }
 
   if (isLoading) {
@@ -186,6 +198,10 @@ export default function MyPage() {
           </span>
         </div>
 
+        {profileError && (
+          <p className="mt-2 text-xs text-danger">{profileError}</p>
+        )}
+
         <Button
           size="md"
           className="mt-3"
@@ -213,6 +229,9 @@ export default function MyPage() {
           />
           <span className="text-sm text-ink-soft">원</span>
         </div>
+        {budgetError && (
+          <p className="mt-2 text-xs text-danger">{budgetError}</p>
+        )}
         <Button
           size="md"
           className="mt-3"

@@ -95,13 +95,13 @@ export async function updateMyProfile(
     }
     return { success: true, data: fromBe1Profile(data.data), error: null };
   } catch (err) {
-    console.warn("[mypage-api] 백엔드 미연동 - 목데이터로 처리", err);
-    const merged: UserProfile = {
-      ...MOCK_PROFILE,
-      ...patch,
-      bodyInfo: patch.bodyInfo ?? MOCK_PROFILE.bodyInfo,
-      budget: patch.budget ?? MOCK_PROFILE.budget,
+    // 백엔드가 설정돼 있는데 요청이 실패한 경우(토큰 만료 등) — 저장 안 된 걸 성공으로
+    // 속이면 안 되므로 실패를 그대로 알림. (로컬 프리뷰용 폴백은 위 hasApiBase() 분기에서만 사용)
+    console.warn("[mypage-api] 프로필 저장 실패", err);
+    return {
+      success: false,
+      data: null,
+      error: { code: "USER_004", message: "저장에 실패했어요. 다시 로그인하거나 잠시 후 다시 시도해 주세요." },
     };
-    return { success: true, data: merged, error: null };
   }
 }
