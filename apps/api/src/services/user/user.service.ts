@@ -9,6 +9,8 @@ export interface UserProfile {
   email: string;
   personalColor: string | null;  // ✅ null 허용으로 변경
   bodyType: string | null;       // ✅ null 허용으로 변경
+  heightCm: number | null;
+  weightKg: number | null;
   monthlyBudget: number | null;  // ✅ null 허용으로 변경
   createdAt: string;
   updatedAt: string;
@@ -24,6 +26,8 @@ export class UserService {
         email: true,
         personalColor: true,
         bodyType: true,
+        heightCm: true,
+        weightKg: true,
         monthlyBudget: true,
         createdAt: true,
         updatedAt: true,
@@ -37,18 +41,22 @@ export class UserService {
       email: user.email,
       personalColor: user.personalColor,      // null 그대로 반환
       bodyType: user.bodyType,                // null 그대로 반환
+      heightCm: user.heightCm,
+      weightKg: user.weightKg,
       monthlyBudget: user.monthlyBudget,      // null 그대로 반환
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
   }
 
-  // 프로필 수정 (퍼스널컬러, 체형, 예산)
+  // 프로필 수정 (퍼스널컬러, 체형, 키/몸무게, 예산)
   async updateProfile(
     userId: number,
     data: {
       personalColor?: string;
       bodyType?: string;
+      heightCm?: number;
+      weightKg?: number;
       monthlyBudget?: number;
     }
   ): Promise<UserProfile | null> {
@@ -57,6 +65,8 @@ export class UserService {
       data: {
         personalColor: data.personalColor,
         bodyType: data.bodyType,
+        heightCm: data.heightCm,
+        weightKg: data.weightKg,
         monthlyBudget: data.monthlyBudget,
       },
       select: {
@@ -64,6 +74,8 @@ export class UserService {
         email: true,
         personalColor: true,
         bodyType: true,
+        heightCm: true,
+        weightKg: true,
         monthlyBudget: true,
         createdAt: true,
         updatedAt: true,
@@ -75,6 +87,8 @@ export class UserService {
       email: user.email,
       personalColor: user.personalColor,
       bodyType: user.bodyType,
+      heightCm: user.heightCm,
+      weightKg: user.weightKg,
       monthlyBudget: user.monthlyBudget,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),

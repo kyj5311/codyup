@@ -41,9 +41,23 @@ function validateUpdateBody(body: UpdateUserProfileInput): string | null {
     }
   }
 
+  if (body.heightCm !== undefined) {
+    if (!Number.isInteger(body.heightCm) || body.heightCm <= 0) {
+      return '키는 0보다 큰 정수여야 합니다.';
+    }
+  }
+
+  if (body.weightKg !== undefined) {
+    if (!Number.isInteger(body.weightKg) || body.weightKg <= 0) {
+      return '몸무게는 0보다 큰 정수여야 합니다.';
+    }
+  }
+
   if (
     body.personalColor === undefined &&
     body.bodyType === undefined &&
+    body.heightCm === undefined &&
+    body.weightKg === undefined &&
     body.monthlyBudget === undefined
   ) {
     return '수정할 항목이 하나 이상 필요합니다.';

@@ -6,6 +6,8 @@ import type { BodyShape } from "../types/onboarding";
 interface Be1UserProfile {
   personalColor: string | null;
   bodyType: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
   monthlyBudget: number | null;
   email: string;
   createdAt: string;
@@ -25,15 +27,15 @@ const MOCK_PROFILE: UserProfile = {
 };
 
 // BE1 응답을 마이페이지 화면 타입으로 변환.
-// 주의: 키/몸무게·닉네임·퍼스널컬러 신뢰도는 BE1 프로필 API에 아직 없는 필드라 비워둠(화면에서 "-"로 표시됨).
+// 주의: 닉네임·퍼스널컬러 신뢰도는 BE1 프로필 API에 아직 없는 필드라 비워둠(화면에서 "-"로 표시됨).
 function fromBe1Profile(raw: Be1UserProfile): UserProfile {
   return {
     id: raw.email,
     nickname: raw.email.split("@")[0],
     email: raw.email,
     bodyInfo: {
-      heightCm: null,
-      weightKg: null,
+      heightCm: raw.heightCm,
+      weightKg: raw.weightKg,
       bodyShape: (raw.bodyType as BodyShape | null) ?? null,
     },
     budget: { monthlyBudgetKrw: raw.monthlyBudget },
@@ -81,6 +83,8 @@ export async function updateMyProfile(
       "/user/profile",
       {
         ...(patch.bodyInfo?.bodyShape ? { bodyType: patch.bodyInfo.bodyShape } : {}),
+        ...(patch.bodyInfo?.heightCm ? { heightCm: patch.bodyInfo.heightCm } : {}),
+        ...(patch.bodyInfo?.weightKg ? { weightKg: patch.bodyInfo.weightKg } : {}),
         ...(patch.budget?.monthlyBudgetKrw
           ? { monthlyBudget: patch.budget.monthlyBudgetKrw }
           : {}),

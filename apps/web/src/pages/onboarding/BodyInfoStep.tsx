@@ -29,8 +29,6 @@ export default function BodyInfoStep({
 
   function handleNext() {
     if (!canProceed) return;
-    // 키/몸무게는 BE1 명세서의 프로필 API엔 아직 없는 필드라 서버로는 보내지
-    // 않고, 화면에는 향후 체형 추천 고도화를 위해 계속 입력받아 둠.
     onComplete({
       heightCm: Number(heightCm),
       weightKg: Number(weightKg),

@@ -79,6 +79,8 @@ export default function OnboardingFlow({ onFinish }: OnboardingFlowProps) {
                     manualTone,
                   ),
                   bodyType: nextState.bodyInfo.bodyShape,
+                  heightCm: nextState.bodyInfo.heightCm ?? undefined,
+                  weightKg: nextState.bodyInfo.weightKg ?? undefined,
                   monthlyBudget: budget.monthlyBudgetKrw,
                 });
               } catch {

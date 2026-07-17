@@ -8,6 +8,8 @@ import { httpClient, type ApiResponse } from "./http-client";
 export interface UserProfilePayload {
   personalColor: string;
   bodyType: string;
+  heightCm?: number;
+  weightKg?: number;
   monthlyBudget: number;
 }
 
