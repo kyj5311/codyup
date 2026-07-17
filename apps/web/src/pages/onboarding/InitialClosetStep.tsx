@@ -7,7 +7,7 @@ import ClosetItemThumbnail from "../../components/ClosetItemThumbnail";
 import { createClosetItem } from "../../api/closet-api";
 import {
   CATEGORIES,
-  CLOSET_COLORS,
+  CLOSET_COLOR_GROUPS,
   createEmptyDraft,
   draftToCreatePayload,
   type ClosetItem,
@@ -149,7 +149,7 @@ export default function InitialClosetStep({
           <span className="text-sm font-medium text-ink-soft">색상</span>
           <div className="mt-2">
             <ColorSwatchPicker
-              colors={CLOSET_COLORS}
+              groups={CLOSET_COLOR_GROUPS}
               selectedName={draft.color}
               onSelect={(color) =>
                 setDraft((prev) => ({ ...prev, color: color.name }))

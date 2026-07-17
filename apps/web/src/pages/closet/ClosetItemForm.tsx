@@ -6,7 +6,7 @@ import Chip from "../../components/Chip";
 import ColorSwatchPicker from "../../components/ColorSwatchPicker";
 import {
   CATEGORIES,
-  CLOSET_COLORS,
+  CLOSET_COLOR_GROUPS,
   createEmptyDraft,
   type ClosetItemDraft,
 } from "../../types/closet";
@@ -132,7 +132,7 @@ export default function ClosetItemForm({
           <span className="text-sm font-medium text-ink-soft">색상</span>
           <div className="mt-2">
             <ColorSwatchPicker
-              colors={CLOSET_COLORS}
+              groups={CLOSET_COLOR_GROUPS}
               selectedName={draft.color}
               onSelect={(color) =>
                 setDraft((prev) => ({ ...prev, color: color.name }))
