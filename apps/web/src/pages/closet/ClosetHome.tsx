@@ -95,6 +95,7 @@ export default function ClosetHome({
               key={item.id}
               imageUrl={item.imageUrl}
               alt={`${item.category} ${item.color}`}
+              category={item.category}
               onClick={() => onSelectItem(item.id)}
               onDelete={isEditing ? () => onDeleteItem(item.id) : undefined}
             />
