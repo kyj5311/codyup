@@ -101,6 +101,12 @@ export default function ClosetAnalysisView({
       )
     : 0;
 
+  // 활용 가능한 코디 추천은 상의·하의가 하나씩은 있어야 조합이 나옴 —
+  // 둘 중 하나라도 없어서 빈 배열이 온 것인지, 진짜 준비 중인지 구분해서 안내
+  const hasTopsAndBottoms =
+    (analysis?.categoryCounts["상의"] ?? 0) > 0 &&
+    (analysis?.categoryCounts["하의"] ?? 0) > 0;
+
   return (
     <div className="flex min-h-full flex-col pb-10">
       <header className="flex items-center py-2">
@@ -217,7 +223,9 @@ export default function ClosetAnalysisView({
             ) : (
               <Card tone="cream" className="mt-2">
                 <p className="text-sm text-gray-text">
-                  활용 가능한 코디 추천은 준비 중이에요. 곧 만나보실 수 있어요.
+                  {hasTopsAndBottoms
+                    ? "활용 가능한 코디 추천은 준비 중이에요. 곧 만나보실 수 있어요."
+                    : "상의·하의를 하나씩 등록하면 AI가 활용 가능한 코디를 추천해드려요."}
                 </p>
               </Card>
             )}
