@@ -10,7 +10,8 @@ export type BodyShape =
   | "직사각형"
   | "역삼각형";
 
-// 퍼스널컬러 4계절 12톤 분류
+// 퍼스널컬러 4계절 12톤 분류 — 타입은 12개 다 유지(백엔드 TONE_COLORS·기존 저장 데이터 호환용).
+// 단, 사용자가 실제로 고를 수 있는 건 9톤뿐 — PERSONAL_COLOR_SEASONS 참고
 export type PersonalColorTone =
   | "봄 라이트"
   | "봄 브라이트"
