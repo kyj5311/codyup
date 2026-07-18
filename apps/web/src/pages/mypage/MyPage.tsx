@@ -6,7 +6,15 @@ import Chip from "../../components/Chip";
 import PageHeader from "../../components/PageHeader";
 import { fetchMyProfile, updateMyProfile } from "../../api/mypage-api";
 import type { UserProfile } from "../../types/mypage";
-import type { BodyShape } from "../../types/onboarding";
+import {
+  PERSONAL_COLOR_SEASONS,
+  type BodyShape,
+  type PersonalColorTone,
+} from "../../types/onboarding";
+
+const ALL_PERSONAL_COLOR_TONES: PersonalColorTone[] = PERSONAL_COLOR_SEASONS.flatMap(
+  (group) => group.tones,
+);
 
 const BODY_SHAPES: BodyShape[] = [
   "스트레이트",
@@ -34,6 +42,11 @@ export default function MyPage() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
+  // 퍼스널컬러
+  const [personalColorInput, setPersonalColorInput] = useState<PersonalColorTone | null>(null);
+  const [isSavingPersonalColor, setIsSavingPersonalColor] = useState(false);
+  const [personalColorError, setPersonalColorError] = useState<string | null>(null);
+
   useEffect(() => {
     let ignore = false;
     fetchMyProfile().then((res) => {
@@ -55,6 +68,12 @@ export default function MyPage() {
     setHeightInput(data.bodyInfo.heightCm != null ? String(data.bodyInfo.heightCm) : "");
     setWeightInput(data.bodyInfo.weightKg != null ? String(data.bodyInfo.weightKg) : "");
     setBodyShapeInput(data.bodyInfo.bodyShape);
+    // 저장된 값이 선택 가능한 9톤 중 하나와 정확히 일치할 때만 칩을 미리 선택해둠
+    // (예전 "봄 웜"처럼 톤이 아닌 값이 저장돼 있으면 아무 칩도 선택 안 된 상태로 둠)
+    const savedTone = data.personalColorResult?.season;
+    setPersonalColorInput(
+      ALL_PERSONAL_COLOR_TONES.find((tone) => tone === savedTone) ?? null,
+    );
   }
 
   async function handleSaveBudget() {
@@ -70,6 +89,20 @@ export default function MyPage() {
       applyProfileToForm(res.data);
     } else {
       setBudgetError(res.error?.message ?? "저장에 실패했어요. 다시 시도해 주세요.");
+    }
+  }
+
+  async function handleSavePersonalColor() {
+    if (!profile || !personalColorInput) return;
+
+    setIsSavingPersonalColor(true);
+    setPersonalColorError(null);
+    const res = await updateMyProfile({ personalColor: personalColorInput });
+    setIsSavingPersonalColor(false);
+    if (res.success && res.data) {
+      applyProfileToForm(res.data);
+    } else {
+      setPersonalColorError(res.error?.message ?? "저장에 실패했어요. 다시 시도해 주세요.");
     }
   }
 
@@ -114,20 +147,50 @@ export default function MyPage() {
         <p className="text-sm text-gray-text">{profile.email}</p>
       </div>
 
-      {profile.personalColorResult && (
-        <Card tone="yellow">
-          <div className="flex items-center gap-1.5 text-ink">
-            <Palette size={16} />
-            <p className="text-sm font-semibold">퍼스널컬러</p>
-          </div>
-          <p className="mt-1 text-xl font-bold text-ink">
-            {profile.personalColorResult.season}
+      <Card tone="yellow">
+        <div className="flex items-center gap-1.5 text-ink">
+          <Palette size={16} />
+          <p className="text-sm font-semibold">퍼스널컬러</p>
+        </div>
+
+        {profile.personalColorResult && (
+          <p className="mt-1 text-sm text-ink-soft">
+            현재: <span className="font-semibold text-ink">{profile.personalColorResult.season}</span>
           </p>
-          <p className="mt-1 text-xs text-ink-soft">
-            진단 신뢰도 {Math.round(profile.personalColorResult.confidence * 100)}%
-          </p>
-        </Card>
-      )}
+        )}
+
+        <div className="mt-3 flex flex-col gap-2">
+          {PERSONAL_COLOR_SEASONS.map((group) => (
+            <div key={group.season}>
+              <p className="text-xs text-ink-soft">{group.season}</p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {group.tones.map((tone) => (
+                  <Chip
+                    key={tone}
+                    selected={personalColorInput === tone}
+                    onClick={() => setPersonalColorInput(tone)}
+                  >
+                    {tone}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {personalColorError && (
+          <p className="mt-2 text-xs text-danger">{personalColorError}</p>
+        )}
+
+        <Button
+          size="md"
+          className="mt-3"
+          onClick={handleSavePersonalColor}
+          disabled={!personalColorInput || isSavingPersonalColor}
+        >
+          {isSavingPersonalColor ? "저장 중..." : "퍼스널컬러 저장"}
+        </Button>
+      </Card>
 
       {/* 닉네임 + 체형 정보 (수정 가능) */}
       <Card tone="cream">

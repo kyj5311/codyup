@@ -21,4 +21,5 @@ export interface UpdateProfileRequest {
   nickname?: string;
   bodyInfo?: BodyInfoInput;
   budget?: BudgetInput;
+  personalColor?: string;
 }

@@ -75,6 +75,9 @@ export async function updateMyProfile(
       ...patch,
       bodyInfo: patch.bodyInfo ?? MOCK_PROFILE.bodyInfo,
       budget: patch.budget ?? MOCK_PROFILE.budget,
+      personalColorResult: patch.personalColor
+        ? { season: patch.personalColor, confidence: 1 }
+        : MOCK_PROFILE.personalColorResult,
     };
     return { success: true, data: merged, error: null };
   }
@@ -88,6 +91,7 @@ export async function updateMyProfile(
         ...(patch.budget?.monthlyBudgetKrw
           ? { monthlyBudget: patch.budget.monthlyBudgetKrw }
           : {}),
+        ...(patch.personalColor ? { personalColor: patch.personalColor } : {}),
       },
     );
     if (!data.success || !data.data) {
