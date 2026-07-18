@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Palette, Ruler, Wallet, User } from "lucide-react";
+import { ChevronLeft, Palette, Ruler, Wallet, User } from "lucide-react";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import Chip from "../../components/Chip";
 import PageHeader from "../../components/PageHeader";
+import PersonalColorPicker from "../../components/PersonalColorPicker";
 import { fetchMyProfile, updateMyProfile } from "../../api/mypage-api";
 import type { UserProfile } from "../../types/mypage";
 import {
@@ -46,6 +47,7 @@ export default function MyPage() {
   const [personalColorInput, setPersonalColorInput] = useState<PersonalColorTone | null>(null);
   const [isSavingPersonalColor, setIsSavingPersonalColor] = useState(false);
   const [personalColorError, setPersonalColorError] = useState<string | null>(null);
+  const [isEditingPersonalColor, setIsEditingPersonalColor] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -101,9 +103,20 @@ export default function MyPage() {
     setIsSavingPersonalColor(false);
     if (res.success && res.data) {
       applyProfileToForm(res.data);
+      setIsEditingPersonalColor(false);
     } else {
       setPersonalColorError(res.error?.message ?? "저장에 실패했어요. 다시 시도해 주세요.");
     }
+  }
+
+  function handleCancelPersonalColorEdit() {
+    // 저장 안 하고 나가는 거라 선택값을 마지막으로 저장된 값으로 되돌림
+    const savedTone = profile?.personalColorResult?.season;
+    setPersonalColorInput(
+      ALL_PERSONAL_COLOR_TONES.find((tone) => tone === savedTone) ?? null,
+    );
+    setPersonalColorError(null);
+    setIsEditingPersonalColor(false);
   }
 
   async function handleSaveProfile() {
@@ -139,6 +152,54 @@ export default function MyPage() {
     );
   }
 
+  if (isEditingPersonalColor) {
+    return (
+      <div className="flex min-h-full flex-col p-5">
+        <header className="flex items-center py-2">
+          <button
+            type="button"
+            onClick={handleCancelPersonalColorEdit}
+            aria-label="뒤로가기"
+            className="text-ink"
+          >
+            <ChevronLeft size={22} strokeWidth={2} />
+          </button>
+          <p className="flex-1 text-center text-lg font-bold text-ink">
+            퍼스널컬러 수정
+          </p>
+          <span className="w-[22px]" />
+        </header>
+
+        <p className="mt-2 text-sm text-ink-soft">
+          사진으로 간이 진단해보거나, 잘 모르겠다면 아래에서 직접 골라주세요.
+        </p>
+
+        <div className="mt-5">
+          <PersonalColorPicker
+            value={personalColorInput}
+            onChange={setPersonalColorInput}
+          />
+        </div>
+
+        {personalColorError && (
+          <p className="mt-3 text-sm text-danger">{personalColorError}</p>
+        )}
+
+        <div className="mt-6 flex flex-col gap-3">
+          <Button
+            onClick={handleSavePersonalColor}
+            disabled={!personalColorInput || isSavingPersonalColor}
+          >
+            {isSavingPersonalColor ? "저장 중..." : "저장"}
+          </Button>
+          <Button variant="ghost" size="md" onClick={handleCancelPersonalColorEdit}>
+            취소
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-5 p-5">
       <PageHeader title="마이페이지" />
@@ -148,48 +209,23 @@ export default function MyPage() {
       </div>
 
       <Card tone="yellow">
-        <div className="flex items-center gap-1.5 text-ink">
-          <Palette size={16} />
-          <p className="text-sm font-semibold">퍼스널컬러</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-ink">
+            <Palette size={16} />
+            <p className="text-sm font-semibold">퍼스널컬러</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditingPersonalColor(true)}
+            className="rounded-full bg-ink px-3 py-1 text-xs font-medium text-cream"
+          >
+            수정하기
+          </button>
         </div>
 
-        {profile.personalColorResult && (
-          <p className="mt-1 text-sm text-ink-soft">
-            현재: <span className="font-semibold text-ink">{profile.personalColorResult.season}</span>
-          </p>
-        )}
-
-        <div className="mt-3 flex flex-col gap-2">
-          {PERSONAL_COLOR_SEASONS.map((group) => (
-            <div key={group.season}>
-              <p className="text-xs text-ink-soft">{group.season}</p>
-              <div className="mt-1 flex flex-wrap gap-2">
-                {group.tones.map((tone) => (
-                  <Chip
-                    key={tone}
-                    selected={personalColorInput === tone}
-                    onClick={() => setPersonalColorInput(tone)}
-                  >
-                    {tone}
-                  </Chip>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {personalColorError && (
-          <p className="mt-2 text-xs text-danger">{personalColorError}</p>
-        )}
-
-        <Button
-          size="md"
-          className="mt-3"
-          onClick={handleSavePersonalColor}
-          disabled={!personalColorInput || isSavingPersonalColor}
-        >
-          {isSavingPersonalColor ? "저장 중..." : "퍼스널컬러 저장"}
-        </Button>
+        <p className="mt-1 text-xl font-bold text-ink">
+          {profile.personalColorResult?.season ?? "아직 설정 안 함"}
+        </p>
       </Card>
 
       {/* 닉네임 + 체형 정보 (수정 가능) */}
