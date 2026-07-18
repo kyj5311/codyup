@@ -120,13 +120,14 @@ export const FITTABLE_CATEGORIES: ClothingCategory[] = ["상의", "하의", "아
 
 export const FIT_OPTIONS = ["슬림", "레귤러", "오버", "루즈"] as const;
 
-// 기장 선택지는 카테고리마다 의미가 달라서(상의=크롭~롱, 하의=반바지~긴바지, 아우터=숏~롱) 따로 둠
+// 기장 선택지는 카테고리마다 의미가 달라서 따로 둠
+// (상의/아우터=소매 기장, 하의=바지 기장)
 export const LENGTH_OPTIONS_BY_CATEGORY: Partial<
   Record<ClothingCategory, string[]>
 > = {
-  상의: ["크롭", "레귤러", "롱"],
-  하의: ["숏", "롱"],
-  아우터: ["숏", "미디", "롱"],
+  상의: ["반팔", "긴팔"],
+  하의: ["숏", "롱", "버뮤다"],
+  아우터: ["반팔", "긴팔"],
 };
 
 // GET /closet, GET /closet/:id 응답 데이터 형태

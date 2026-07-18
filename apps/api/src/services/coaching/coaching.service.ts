@@ -188,6 +188,8 @@ function resolveToneColors(personalColor: string): { label: string; colors: stri
 
 // 체형별 선호 핏·기장 — 상의/하의/아우터 아이템에 fit·length가 입력된 경우에만 반영됨
 // (값이 없는 아이템은 중립 처리 — 감점/가점 없음)
+// 상의·아우터의 기장은 소매 기장(반팔/긴팔)이라 체형 실루엣과는 무관 — preferredLengths를
+// 빈 배열로 둬서 핏만으로 판단하고, 하의 기장(숏/롱/버뮤다)만 다리 라인에 영향을 주므로 채점에 사용
 interface BodyTypeCategoryRule {
   preferredFits: string[];
   preferredLengths: string[];
@@ -204,45 +206,45 @@ interface BodyTypeRule {
 const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
   스트레이트: {
     label: '스트레이트',
-    tip: '세로 라인을 살려주는 슬림·레귤러 핏과 롱 기장이 잘 어울려요',
-    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['레귤러', '롱'] },
+    tip: '허리 라인을 강조하기보다 세로 라인을 살려주는 슬림·레귤러 핏과 롱 팬츠가 잘 어울려요',
+    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
     하의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
-    아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
+    아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
   },
   웨이브: {
     label: '웨이브',
-    tip: '허리 라인을 드러내는 슬림 핏과 크롭 상의·숏 아우터가 다리를 길어 보이게 해요',
-    상의: { preferredFits: ['슬림'], preferredLengths: ['크롭', '레귤러'] },
+    tip: '허리 라인을 드러내는 슬림 핏 상의·하의가 체형의 곡선을 살려줘요',
+    상의: { preferredFits: ['슬림'], preferredLengths: [] },
     하의: { preferredFits: ['슬림'], preferredLengths: ['롱'] },
-    아우터: { preferredFits: ['슬림'], preferredLengths: ['숏'] },
+    아우터: { preferredFits: ['슬림'], preferredLengths: [] },
   },
   내추럴: {
     label: '내추럴',
     tip: '여유 있는 오버·루즈 핏이 편안하면서도 세련된 느낌을 줘요',
-    상의: { preferredFits: ['오버', '루즈'], preferredLengths: ['레귤러', '롱'] },
+    상의: { preferredFits: ['오버', '루즈'], preferredLengths: [] },
     하의: { preferredFits: ['오버', '루즈', '레귤러'], preferredLengths: ['롱'] },
-    아우터: { preferredFits: ['오버', '루즈'], preferredLengths: ['미디', '롱'] },
+    아우터: { preferredFits: ['오버', '루즈'], preferredLengths: [] },
   },
   모래시계: {
     label: '모래시계',
     tip: '허리 라인이 드러나는 슬림·레귤러 핏이 체형의 곡선을 살려줘요',
-    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['레귤러'] },
+    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
     하의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
-    아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['미디'] },
+    아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
   },
   직사각형: {
     label: '직사각형',
-    tip: '오버핏과 크롭 기장을 매치하면 허리 라인에 입체감이 생겨요',
-    상의: { preferredFits: ['오버', '루즈'], preferredLengths: ['크롭', '레귤러'] },
+    tip: '오버핏 상의로 허리 라인에 입체감을 더하면 좋아요',
+    상의: { preferredFits: ['오버', '루즈'], preferredLengths: [] },
     하의: { preferredFits: ['오버', '루즈'], preferredLengths: ['롱'] },
-    아우터: { preferredFits: ['오버'], preferredLengths: ['미디'] },
+    아우터: { preferredFits: ['오버'], preferredLengths: [] },
   },
   역삼각형: {
     label: '역삼각형',
     tip: '상체는 슬림하게, 하체는 여유 있는 핏으로 밸런스를 맞추면 좋아요',
-    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['레귤러'] },
+    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
     하의: { preferredFits: ['오버', '루즈'], preferredLengths: ['롱'] },
-    아우터: { preferredFits: ['슬림'], preferredLengths: ['숏', '미디'] },
+    아우터: { preferredFits: ['슬림'], preferredLengths: [] },
   },
 };
 
@@ -345,12 +347,16 @@ function evaluateCombo(
       let dataCount = 0;
       (['상의', '하의', '아우터'] as const).forEach((category) => {
         const item = items.find((i) => i.category === category);
-        if (!item || (!item.fit && !item.length)) return;
-        dataCount++;
+        if (!item) return;
         const categoryRule = rule[category];
-        const fitMatch = item.fit ? categoryRule.preferredFits.includes(item.fit) : false;
-        const lengthMatch = item.length
-          ? categoryRule.preferredLengths.includes(item.length)
+        // 상의/아우터는 preferredLengths가 비어 있어 소매 기장은 채점에서 제외되고 핏만 봄
+        const hasScorableFit = Boolean(item.fit);
+        const hasScorableLength = Boolean(item.length) && categoryRule.preferredLengths.length > 0;
+        if (!hasScorableFit && !hasScorableLength) return;
+        dataCount++;
+        const fitMatch = hasScorableFit ? categoryRule.preferredFits.includes(item.fit!) : false;
+        const lengthMatch = hasScorableLength
+          ? categoryRule.preferredLengths.includes(item.length!)
           : false;
         if (fitMatch || lengthMatch) matchCount++;
       });
