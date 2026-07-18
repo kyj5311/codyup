@@ -9,6 +9,10 @@ import CoordiRecommendationPanel from "./components/CoordiRecommendationPanel";
 const TABS = ["평가", "추천"] as const;
 type CoachingTab = (typeof TABS)[number];
 
+interface CoachingHomeProps {
+  initialTab?: CoachingTab;
+}
+
 // 백엔드 미연동 상태에서 화면을 볼 수 있도록 준비한 목 옷장 데이터
 // BE1 명세서 기준 ClosetItem 형태(id: number, color: string, subCategory 없음)에 맞춤
 const NOW = new Date().toISOString();
@@ -55,8 +59,12 @@ const MOCK_CLOSET_ITEMS: ClosetItem[] = [
   },
 ];
 
-export default function CoachingHome() {
-  const [tab, setTab] = useState<CoachingTab>("평가");
+export default function CoachingHome({ initialTab = "평가" }: CoachingHomeProps) {
+  const [tab, setTab] = useState<CoachingTab>(initialTab);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
   const [closetItems, setClosetItems] = useState<ClosetItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

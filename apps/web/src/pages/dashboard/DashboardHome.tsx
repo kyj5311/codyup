@@ -9,6 +9,7 @@ interface DashboardHomeProps {
   onNavigateCoaching?: () => void;
   onNavigateCloset?: () => void;
   onNavigateAiAnalysis?: () => void;
+  onNavigateTodayCoordi?: () => void;
 }
 
 export default function DashboardHome({
@@ -16,6 +17,7 @@ export default function DashboardHome({
   onNavigateCoaching,
   onNavigateCloset,
   onNavigateAiAnalysis,
+  onNavigateTodayCoordi,
 }: DashboardHomeProps) {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,12 +55,16 @@ export default function DashboardHome({
       ) : (
         <>
           {/* 오늘의 추천 코디 */}
-          <div className="flex items-center justify-between rounded-card bg-cream-deep p-5">
+          <button
+            type="button"
+            onClick={onNavigateTodayCoordi}
+            className="flex items-center justify-between rounded-card bg-cream-deep p-5 text-left"
+          >
             <p className="text-sm text-ink-soft">오늘의 추천 코디</p>
             <div className="flex h-10 w-24 overflow-hidden rounded-xl">
               <TodayCoordiSwatch items={summary.todayCoordi} compact />
             </div>
-          </div>
+          </button>
 
           {/* AI 스타일 플랜 */}
           <button
