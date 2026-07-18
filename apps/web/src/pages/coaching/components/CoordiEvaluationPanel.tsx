@@ -4,11 +4,15 @@ import Button from "../../../components/Button";
 import ClosetItemThumbnail from "../../../components/ClosetItemThumbnail";
 import { evaluateCoordi } from "../../../api/coaching-api";
 import type { CoordiEvaluationResult } from "../../../types/coaching";
-import type { ClosetItem } from "../../../types/closet";
+import type { ClosetItem, ClothingCategory } from "../../../types/closet";
 
 interface CoordiEvaluationPanelProps {
   closetItems: ClosetItem[];
 }
+
+// 실제로 동시에 입을 수 있는 건 하나뿐인 카테고리 — 이 중에서는 항상 최대 1개만 선택되게 함
+// (악세서리는 여러 개 같이 착용 가능하니 제외)
+const SINGLE_SELECT_CATEGORIES: ClothingCategory[] = ["상의", "하의", "아우터", "신발"];
 
 export default function CoordiEvaluationPanel({
   closetItems,
@@ -18,11 +22,22 @@ export default function CoordiEvaluationPanel({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  function toggleSelect(id: number) {
+  function toggleSelect(item: ClosetItem) {
     setResult(null);
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
+    setSelectedIds((prev) => {
+      if (prev.includes(item.id)) {
+        return prev.filter((i) => i !== item.id);
+      }
+      if (SINGLE_SELECT_CATEGORIES.includes(item.category)) {
+        // 같은 카테고리를 이미 골랐으면 새로 고른 것으로 교체(라디오 버튼처럼 동작)
+        const withoutSameCategory = prev.filter((id) => {
+          const existing = closetItems.find((c) => c.id === id);
+          return existing?.category !== item.category;
+        });
+        return [...withoutSameCategory, item.id];
+      }
+      return [...prev, item.id];
+    });
   }
 
   async function handleEvaluate() {
@@ -47,9 +62,14 @@ export default function CoordiEvaluationPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-ink-soft">
-        평가받고 싶은 옷을 골라주세요 ({selectedIds.length}개 선택)
-      </p>
+      <div>
+        <p className="text-sm text-ink-soft">
+          평가받고 싶은 옷을 골라주세요 ({selectedIds.length}개 선택)
+        </p>
+        <p className="mt-1 text-xs text-gray-text">
+          상의·하의·아우터·신발은 하나씩만 선택돼요. 다시 누르면 다른 아이템으로 바뀌어요.
+        </p>
+      </div>
 
       <div className="grid grid-cols-3 gap-3">
         {closetItems.map((item) => (
@@ -57,7 +77,7 @@ export default function CoordiEvaluationPanel({
             key={item.id}
             imageUrl={item.imageUrl || null}
             alt={`${item.color} ${item.category}`}
-            onClick={() => toggleSelect(item.id)}
+            onClick={() => toggleSelect(item)}
             className={[
               "aspect-square w-full",
               selectedIds.includes(item.id)
@@ -68,12 +88,14 @@ export default function CoordiEvaluationPanel({
         ))}
       </div>
 
-      <Button
-        onClick={handleEvaluate}
-        disabled={selectedIds.length === 0 || isSubmitting}
-      >
-        {isSubmitting ? "평가 중..." : "AI 코디 평가받기"}
-      </Button>
+      <div className="sticky bottom-0 -mx-5 bg-cream px-5 pb-3 pt-2">
+        <Button
+          onClick={handleEvaluate}
+          disabled={selectedIds.length === 0 || isSubmitting}
+        >
+          {isSubmitting ? "평가 중..." : "AI 코디 평가받기"}
+        </Button>
+      </div>
 
       {errorMessage && (
         <p className="text-sm text-danger">{errorMessage}</p>
