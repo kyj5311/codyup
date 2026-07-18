@@ -317,11 +317,29 @@ export class CoachingService {
       prisma.closetItem.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
     ]);
 
-    const byCategory = (category: string) =>
-      items
+    // 카테고리별 후보를 뽑을 때 즐겨찾기를 우선하되, 같은 색상만 계속 뽑히지 않도록
+    // 색상이 겹치지 않는 아이템을 먼저 채우고 남는 자리를 나머지로 채움.
+    // (예전엔 그냥 상위 2개만 뽑아서, 최근 등록된 아이템이 우연히 같은 색이면
+    //  추천 3개가 전부 비슷한 색 조합으로 보이는 문제가 있었음)
+    const byCategory = (category: string) => {
+      const sorted = items
         .filter((i) => i.category === category)
-        .sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
-        .slice(0, 2);
+        .sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
+
+      const picked: PrismaClosetItem[] = [];
+      const usedColors = new Set<string>();
+      for (const item of sorted) {
+        if (picked.length >= 3) break;
+        if (usedColors.has(item.color)) continue;
+        picked.push(item);
+        usedColors.add(item.color);
+      }
+      for (const item of sorted) {
+        if (picked.length >= 3) break;
+        if (!picked.includes(item)) picked.push(item);
+      }
+      return picked;
+    };
 
     const tops = byCategory('상의');
     const bottoms = byCategory('하의');
@@ -351,17 +369,31 @@ export class CoachingService {
     scored.sort((a, b) => b.score - a.score);
 
     // 상위 점수만 뽑으면 상의+하의 조합이 똑같고 아우터/신발만 다른 경우가 많아
-    // 추천 3개가 거의 똑같아 보임 — 상의·하의 조합이 겹치지 않는 것 위주로 다양성 확보
+    // 추천 3개가 거의 똑같아 보임 — 상의 색상이 겹치지 않는 조합을 최우선으로,
+    // 그다음 상의·하의 조합 자체가 겹치지 않는 것 위주로 다양성 확보
     const top3: typeof scored = [];
     const usedPairs = new Set<string>();
+    const usedTopColors = new Set<string>();
+
     for (const entry of scored) {
+      if (top3.length === 3) break;
+      const topItem = entry.combo.find((i) => i.category === '상의');
+      const bottomItem = entry.combo.find((i) => i.category === '하의');
+      const pairKey = `${topItem?.id}-${bottomItem?.id}`;
+      if (usedPairs.has(pairKey)) continue;
+      if (topItem && usedTopColors.has(topItem.color)) continue;
+      usedPairs.add(pairKey);
+      if (topItem) usedTopColors.add(topItem.color);
+      top3.push(entry);
+    }
+    for (const entry of scored) {
+      if (top3.length === 3) break;
       const topItem = entry.combo.find((i) => i.category === '상의');
       const bottomItem = entry.combo.find((i) => i.category === '하의');
       const pairKey = `${topItem?.id}-${bottomItem?.id}`;
       if (usedPairs.has(pairKey)) continue;
       usedPairs.add(pairKey);
       top3.push(entry);
-      if (top3.length === 3) break;
     }
     for (const entry of scored) {
       if (top3.length === 3) break;
