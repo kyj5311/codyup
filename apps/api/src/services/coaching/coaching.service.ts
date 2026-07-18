@@ -195,9 +195,14 @@ interface BodyTypeCategoryRule {
   preferredLengths: string[];
 }
 
+// 체형 보완 색상 배치 — 명도(밝기) 착시 원리: 밝은 색은 확대되어, 어두운 색은 축소되어 보임
+type BodyTypeColorMode = 'monotone' | 'top-lighter' | 'bottom-lighter' | 'contrast' | 'neutral-tone';
+
 interface BodyTypeRule {
   label: string;
   tip: string;
+  colorMode: BodyTypeColorMode;
+  colorTip: string;
   상의: BodyTypeCategoryRule;
   하의: BodyTypeCategoryRule;
   아우터: BodyTypeCategoryRule;
@@ -207,6 +212,8 @@ const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
   스트레이트: {
     label: '스트레이트',
     tip: '허리 라인을 강조하기보다 세로 라인을 살려주는 슬림·레귤러 핏과 롱 팬츠가 잘 어울려요',
+    colorMode: 'monotone',
+    colorTip: '상하의를 비슷한 톤으로 맞추면 세로 라인이 강조돼 슬림해 보여요',
     상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
     하의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
     아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
@@ -214,6 +221,8 @@ const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
   웨이브: {
     label: '웨이브',
     tip: '허리 라인을 드러내는 슬림 핏 상의·하의가 체형의 곡선을 살려줘요',
+    colorMode: 'top-lighter',
+    colorTip: '상의를 하의보다 밝은 색으로 입으면 상체에 볼륨감이 생겨 체형 밸런스가 좋아져요',
     상의: { preferredFits: ['슬림'], preferredLengths: [] },
     하의: { preferredFits: ['슬림'], preferredLengths: ['롱'] },
     아우터: { preferredFits: ['슬림'], preferredLengths: [] },
@@ -221,6 +230,8 @@ const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
   내추럴: {
     label: '내추럴',
     tip: '여유 있는 오버·루즈 핏이 편안하면서도 세련된 느낌을 줘요',
+    colorMode: 'neutral-tone',
+    colorTip: '화려한 색보다 무채색·자연스러운 톤이 내추럴한 체형과 잘 어울려요',
     상의: { preferredFits: ['오버', '루즈'], preferredLengths: [] },
     하의: { preferredFits: ['오버', '루즈', '레귤러'], preferredLengths: ['롱'] },
     아우터: { preferredFits: ['오버', '루즈'], preferredLengths: [] },
@@ -228,6 +239,8 @@ const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
   모래시계: {
     label: '모래시계',
     tip: '허리 라인이 드러나는 슬림·레귤러 핏이 체형의 곡선을 살려줘요',
+    colorMode: 'contrast',
+    colorTip: '상하의를 대비되는 색으로 입으면 잘록한 허리가 더 부각돼요',
     상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
     하의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
     아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
@@ -235,6 +248,8 @@ const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
   직사각형: {
     label: '직사각형',
     tip: '오버핏 상의로 허리 라인에 입체감을 더하면 좋아요',
+    colorMode: 'contrast',
+    colorTip: '상하의를 다른 색으로 나눠 입으면 허리 라인 착시 효과를 줄 수 있어요',
     상의: { preferredFits: ['오버', '루즈'], preferredLengths: [] },
     하의: { preferredFits: ['오버', '루즈'], preferredLengths: ['롱'] },
     아우터: { preferredFits: ['오버'], preferredLengths: [] },
@@ -242,6 +257,8 @@ const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
   역삼각형: {
     label: '역삼각형',
     tip: '상체는 슬림하게, 하체는 여유 있는 핏으로 밸런스를 맞추면 좋아요',
+    colorMode: 'bottom-lighter',
+    colorTip: '하의를 상의보다 밝은 색으로 입으면 넓은 어깨와 밸런스가 맞아요',
     상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: [] },
     하의: { preferredFits: ['오버', '루즈'], preferredLengths: ['롱'] },
     아우터: { preferredFits: ['슬림'], preferredLengths: [] },
@@ -253,6 +270,38 @@ function resolveBodyTypeRule(bodyType: string): BodyTypeRule | null {
   return matched ? BODY_TYPE_RULES[matched] : null;
 }
 
+// 상/하의 색상의 명도(L)를 비교해 체형 보완 색상 배치 규칙에 맞는지 판정
+// 색상 정보가 없거나 팔레트에 없는 색이면 null(중립) 반환
+const LIGHTNESS_MARGIN = 0.12;
+
+function evaluateBodyTypeColorMatch(
+  topColor: string | undefined,
+  bottomColor: string | undefined,
+  mode: BodyTypeColorMode,
+): boolean | null {
+  const topHex = topColor ? COLOR_HEX[topColor] : undefined;
+  const bottomHex = bottomColor ? COLOR_HEX[bottomColor] : undefined;
+  if (!topHex || !bottomHex) return null;
+
+  const top = hexToHsl(topHex);
+  const bottom = hexToHsl(bottomHex);
+
+  switch (mode) {
+    case 'monotone':
+      return Math.abs(top.l - bottom.l) < LIGHTNESS_MARGIN;
+    case 'top-lighter':
+      return top.l - bottom.l > LIGHTNESS_MARGIN;
+    case 'bottom-lighter':
+      return bottom.l - top.l > LIGHTNESS_MARGIN;
+    case 'contrast':
+      return Math.abs(top.l - bottom.l) >= LIGHTNESS_MARGIN;
+    case 'neutral-tone':
+      return isNeutralHsl(top) && isNeutralHsl(bottom);
+    default:
+      return null;
+  }
+}
+
 interface ScoredCombo {
   score: number;
   summary: string;
@@ -260,7 +309,9 @@ interface ScoredCombo {
   improvements: string[];
 }
 
-// 코디의 기본 골격 — 상의·하의·신발을 모두 갖춰야 기본 점수(60점)를 다 받을 수 있음
+// 코디의 기본 골격 — 상의·하의·신발을 모두 갖춰야 기본 점수(40점)를 다 받을 수 있음
+// 점수 배점(총 100점 기준): 기본완성도40 + 아우터5 + 색상궁합10 + 무채색5
+//   + 퍼스널컬러15 + 체형핏15 + 체형색상10 = 100, 즐겨찾기+3은 가산(클리핑으로 100 상한)
 const CORE_CATEGORIES = ['상의', '하의', '신발'];
 
 function evaluateCombo(
@@ -274,7 +325,7 @@ function evaluateCombo(
   const improvements: string[] = [];
 
   const presentCoreCount = CORE_CATEGORIES.filter((c) => categories.has(c)).length;
-  let score = Math.round((presentCoreCount / CORE_CATEGORIES.length) * 60);
+  let score = Math.round((presentCoreCount / CORE_CATEGORIES.length) * 40);
 
   if (presentCoreCount === CORE_CATEGORIES.length) {
     strengths.push('상의·하의·신발을 모두 갖춘 완성도 높은 코디예요');
@@ -284,7 +335,7 @@ function evaluateCombo(
   }
 
   if (categories.has('아우터')) {
-    score += 10;
+    score += 5;
     strengths.push('아우터까지 더해져서 스타일링이 풍성해요');
   }
 
@@ -330,7 +381,7 @@ function evaluateCombo(
     if (tone) {
       const toneMatch = [...colors].some((c) => tone.colors.includes(c));
       if (toneMatch) {
-        score += 10;
+        score += 15;
         strengths.push(`퍼스널컬러(${tone.label})와 잘 어울리는 컬러가 포함됐어요`);
       } else {
         improvements.push(
@@ -363,11 +414,22 @@ function evaluateCombo(
 
       if (dataCount > 0) {
         if (matchCount > 0) {
-          score += Math.min(10, matchCount * 4);
+          score += Math.min(15, matchCount * 5);
           strengths.push(`체형(${rule.label})에 잘 맞는 핏·기장을 갖췄어요`);
         } else {
           improvements.push(`체형(${rule.label})을 고려하면: ${rule.tip}`);
         }
+      }
+
+      // 체형 보완 색상 배치 — 상의·하의 색상의 명도 관계가 체형 보완 규칙에 맞는지 판정
+      const topItem = items.find((i) => i.category === '상의');
+      const bottomItem = items.find((i) => i.category === '하의');
+      const colorMatch = evaluateBodyTypeColorMatch(topItem?.color, bottomItem?.color, rule.colorMode);
+      if (colorMatch === true) {
+        score += 10;
+        strengths.push(`체형(${rule.label}) 보완에 좋은 색상 배치예요`);
+      } else if (colorMatch === false) {
+        improvements.push(`체형(${rule.label}) 보완 팁: ${rule.colorTip}`);
       }
     }
   }
@@ -568,7 +630,7 @@ export class CoachingService {
     if (user?.bodyType) {
       const bodyRule = resolveBodyTypeRule(user.bodyType);
       if (bodyRule) {
-        parts.push(`체형(${bodyRule.label})을 고려하면 ${bodyRule.tip}.`);
+        parts.push(`체형(${bodyRule.label})을 고려하면 ${bodyRule.tip}. ${bodyRule.colorTip}.`);
       }
     }
 
