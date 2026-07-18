@@ -32,7 +32,7 @@ export default function ClosetItemThumbnail({
   category,
   onClick,
   onDelete,
-  className = "aspect-[3/4] w-full",
+  className = "aspect-square w-full",
 }: ClosetItemThumbnailProps) {
   const [hasError, setHasError] = useState(false);
 
