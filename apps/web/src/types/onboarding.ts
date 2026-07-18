@@ -30,11 +30,13 @@ export interface PersonalColorSeasonGroup {
   tones: PersonalColorTone[];
 }
 
+// 사진 간이 진단(personal-color-diagnosis.ts)이 실제로 출력할 수 있는 9톤과 맞춤
+// (봄 트루·가을 딥·겨울 클리어는 진단 알고리즘이 도출하지 않아 선택지에서 제외)
 export const PERSONAL_COLOR_SEASONS: PersonalColorSeasonGroup[] = [
-  { season: "봄 웜톤", tones: ["봄 라이트", "봄 브라이트", "봄 트루"] },
+  { season: "봄 웜톤", tones: ["봄 라이트", "봄 브라이트"] },
   { season: "여름 쿨톤", tones: ["여름 라이트", "여름 뮤트", "여름 브라이트"] },
-  { season: "가을 웜톤", tones: ["가을 뮤트", "가을 딥", "가을 스트롱"] },
-  { season: "겨울 쿨톤", tones: ["겨울 브라이트", "겨울 딥", "겨울 클리어"] },
+  { season: "가을 웜톤", tones: ["가을 뮤트", "가을 스트롱"] },
+  { season: "겨울 쿨톤", tones: ["겨울 브라이트", "겨울 딥"] },
 ];
 
 // 퍼스널컬러 진단 UI(FE1) — 실제 판별 로직/모델 연동은 BE1 담당
