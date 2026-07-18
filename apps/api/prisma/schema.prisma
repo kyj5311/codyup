@@ -34,6 +34,10 @@ model ClosetItem {
   brand      String?
   memo       String?
   isFavorite Boolean  @default(false)
+  // 체형 반영 코디 추천용 — 상의/하의/아우터에서만 의미 있음(신발/악세서리는 null)
+  // 값은 category처럼 자유 문자열이며, 프론트에서 카테고리별로 다른 선택지를 보여줌
+  fit        String? // 핏: 슬림/레귤러/오버/루즈
+  length     String? // 기장: (상의)크롭/레귤러/롱, (하의)숏/롱, (아우터)숏/미디/롱
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

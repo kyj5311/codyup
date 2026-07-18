@@ -83,6 +83,18 @@ export default function ClosetItemDetail({
           <dt className="text-gray-text">색상</dt>
           <dd className="font-medium text-ink">{item.color}</dd>
         </div>
+        {item.fit && (
+          <div className="flex items-center justify-between py-4">
+            <dt className="text-gray-text">핏</dt>
+            <dd className="font-medium text-ink">{item.fit}</dd>
+          </div>
+        )}
+        {item.length && (
+          <div className="flex items-center justify-between py-4">
+            <dt className="text-gray-text">기장</dt>
+            <dd className="font-medium text-ink">{item.length}</dd>
+          </div>
+        )}
         {item.brand && (
           <div className="flex items-center justify-between py-4">
             <dt className="text-gray-text">브랜드</dt>

@@ -115,6 +115,20 @@ export const CLOSET_COLORS: ClosetColorOption[] = CLOSET_COLOR_GROUPS.flatMap(
   (group) => group.colors,
 );
 
+// 체형 반영 코디 추천용 — 상의/하의/아우터에서만 입력받음 (신발/악세서리는 해당 없음)
+export const FITTABLE_CATEGORIES: ClothingCategory[] = ["상의", "하의", "아우터"];
+
+export const FIT_OPTIONS = ["슬림", "레귤러", "오버", "루즈"] as const;
+
+// 기장 선택지는 카테고리마다 의미가 달라서(상의=크롭~롱, 하의=반바지~긴바지, 아우터=숏~롱) 따로 둠
+export const LENGTH_OPTIONS_BY_CATEGORY: Partial<
+  Record<ClothingCategory, string[]>
+> = {
+  상의: ["크롭", "레귤러", "롱"],
+  하의: ["숏", "롱"],
+  아우터: ["숏", "미디", "롱"],
+};
+
 // GET /closet, GET /closet/:id 응답 데이터 형태
 export interface ClosetItem {
   id: number;
@@ -124,6 +138,8 @@ export interface ClosetItem {
   color: string;
   brand?: string;
   memo?: string;
+  fit?: string;
+  length?: string;
   isFavorite: boolean;
   createdAt: string;
   updatedAt: string;
@@ -136,6 +152,8 @@ export interface ClosetItemCreatePayload {
   color: string;
   brand?: string;
   memo?: string;
+  fit?: string;
+  length?: string;
   isFavorite?: boolean;
 }
 
@@ -153,6 +171,8 @@ export interface ClosetItemDraft {
   color: string | null;
   brand: string;
   memo: string;
+  fit: string | null;
+  length: string | null;
   isFavorite: boolean;
 }
 
@@ -165,6 +185,8 @@ export function createEmptyDraft(): ClosetItemDraft {
     color: null,
     brand: "",
     memo: "",
+    fit: null,
+    length: null,
     isFavorite: false,
   };
 }
@@ -173,12 +195,15 @@ export function draftToCreatePayload(
   draft: ClosetItemDraft,
 ): ClosetItemCreatePayload | null {
   if (!draft.imageUrl || !draft.category || !draft.color) return null;
+  const isFittable = FITTABLE_CATEGORIES.includes(draft.category);
   return {
     imageUrl: draft.imageUrl,
     category: draft.category,
     color: draft.color,
     brand: draft.brand || undefined,
     memo: draft.memo || undefined,
+    fit: isFittable ? draft.fit ?? undefined : undefined,
+    length: isFittable ? draft.length ?? undefined : undefined,
     isFavorite: draft.isFavorite,
   };
 }
@@ -192,6 +217,8 @@ export function itemToDraft(item: ClosetItem): ClosetItemDraft {
     color: item.color,
     brand: item.brand ?? "",
     memo: item.memo ?? "",
+    fit: item.fit ?? null,
+    length: item.length ?? null,
     isFavorite: item.isFavorite,
   };
 }

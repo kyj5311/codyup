@@ -13,6 +13,8 @@ interface CreateItemBody {
   color: string;
   brand?: string;
   memo?: string;
+  fit?: string;
+  length?: string;
   isFavorite?: boolean;
 }
 

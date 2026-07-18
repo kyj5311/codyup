@@ -186,6 +186,71 @@ function resolveToneColors(personalColor: string): { label: string; colors: stri
   return null;
 }
 
+// 체형별 선호 핏·기장 — 상의/하의/아우터 아이템에 fit·length가 입력된 경우에만 반영됨
+// (값이 없는 아이템은 중립 처리 — 감점/가점 없음)
+interface BodyTypeCategoryRule {
+  preferredFits: string[];
+  preferredLengths: string[];
+}
+
+interface BodyTypeRule {
+  label: string;
+  tip: string;
+  상의: BodyTypeCategoryRule;
+  하의: BodyTypeCategoryRule;
+  아우터: BodyTypeCategoryRule;
+}
+
+const BODY_TYPE_RULES: Record<string, BodyTypeRule> = {
+  스트레이트: {
+    label: '스트레이트',
+    tip: '세로 라인을 살려주는 슬림·레귤러 핏과 롱 기장이 잘 어울려요',
+    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['레귤러', '롱'] },
+    하의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
+    아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
+  },
+  웨이브: {
+    label: '웨이브',
+    tip: '허리 라인을 드러내는 슬림 핏과 크롭 상의·숏 아우터가 다리를 길어 보이게 해요',
+    상의: { preferredFits: ['슬림'], preferredLengths: ['크롭', '레귤러'] },
+    하의: { preferredFits: ['슬림'], preferredLengths: ['롱'] },
+    아우터: { preferredFits: ['슬림'], preferredLengths: ['숏'] },
+  },
+  내추럴: {
+    label: '내추럴',
+    tip: '여유 있는 오버·루즈 핏이 편안하면서도 세련된 느낌을 줘요',
+    상의: { preferredFits: ['오버', '루즈'], preferredLengths: ['레귤러', '롱'] },
+    하의: { preferredFits: ['오버', '루즈', '레귤러'], preferredLengths: ['롱'] },
+    아우터: { preferredFits: ['오버', '루즈'], preferredLengths: ['미디', '롱'] },
+  },
+  모래시계: {
+    label: '모래시계',
+    tip: '허리 라인이 드러나는 슬림·레귤러 핏이 체형의 곡선을 살려줘요',
+    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['레귤러'] },
+    하의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['롱'] },
+    아우터: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['미디'] },
+  },
+  직사각형: {
+    label: '직사각형',
+    tip: '오버핏과 크롭 기장을 매치하면 허리 라인에 입체감이 생겨요',
+    상의: { preferredFits: ['오버', '루즈'], preferredLengths: ['크롭', '레귤러'] },
+    하의: { preferredFits: ['오버', '루즈'], preferredLengths: ['롱'] },
+    아우터: { preferredFits: ['오버'], preferredLengths: ['미디'] },
+  },
+  역삼각형: {
+    label: '역삼각형',
+    tip: '상체는 슬림하게, 하체는 여유 있는 핏으로 밸런스를 맞추면 좋아요',
+    상의: { preferredFits: ['슬림', '레귤러'], preferredLengths: ['레귤러'] },
+    하의: { preferredFits: ['오버', '루즈'], preferredLengths: ['롱'] },
+    아우터: { preferredFits: ['슬림'], preferredLengths: ['숏', '미디'] },
+  },
+};
+
+function resolveBodyTypeRule(bodyType: string): BodyTypeRule | null {
+  const matched = Object.keys(BODY_TYPE_RULES).find((key) => bodyType.includes(key));
+  return matched ? BODY_TYPE_RULES[matched] : null;
+}
+
 interface ScoredCombo {
   score: number;
   summary: string;
@@ -196,7 +261,11 @@ interface ScoredCombo {
 // 코디의 기본 골격 — 상의·하의·신발을 모두 갖춰야 기본 점수(60점)를 다 받을 수 있음
 const CORE_CATEGORIES = ['상의', '하의', '신발'];
 
-function evaluateCombo(items: PrismaClosetItem[], personalColor: string | null): ScoredCombo {
+function evaluateCombo(
+  items: PrismaClosetItem[],
+  personalColor: string | null,
+  bodyType: string | null,
+): ScoredCombo {
   const categories = new Set(items.map((i) => i.category));
   const colors = new Set(items.map((i) => i.color));
   const strengths: string[] = [];
@@ -269,6 +338,34 @@ function evaluateCombo(items: PrismaClosetItem[], personalColor: string | null):
     }
   }
 
+  if (bodyType) {
+    const rule = resolveBodyTypeRule(bodyType);
+    if (rule) {
+      let matchCount = 0;
+      let dataCount = 0;
+      (['상의', '하의', '아우터'] as const).forEach((category) => {
+        const item = items.find((i) => i.category === category);
+        if (!item || (!item.fit && !item.length)) return;
+        dataCount++;
+        const categoryRule = rule[category];
+        const fitMatch = item.fit ? categoryRule.preferredFits.includes(item.fit) : false;
+        const lengthMatch = item.length
+          ? categoryRule.preferredLengths.includes(item.length)
+          : false;
+        if (fitMatch || lengthMatch) matchCount++;
+      });
+
+      if (dataCount > 0) {
+        if (matchCount > 0) {
+          score += Math.min(10, matchCount * 4);
+          strengths.push(`체형(${rule.label})에 잘 맞는 핏·기장을 갖췄어요`);
+        } else {
+          improvements.push(`체형(${rule.label})을 고려하면: ${rule.tip}`);
+        }
+      }
+    }
+  }
+
   if (items.some((i) => i.isFavorite)) {
     score += 3;
     strengths.push('평소 즐겨 입는 아이템이 포함돼서 만족도가 높을 거예요');
@@ -294,7 +391,7 @@ export class CoachingService {
     if (items.length === 0) return null;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    const result = evaluateCombo(items, user?.personalColor ?? null);
+    const result = evaluateCombo(items, user?.personalColor ?? null, user?.bodyType ?? null);
 
     return {
       id: `eval-${Date.now()}`,
@@ -364,7 +461,7 @@ export class CoachingService {
 
     const scored = candidates.map((combo) => ({
       combo,
-      ...evaluateCombo(combo, user?.personalColor ?? null),
+      ...evaluateCombo(combo, user?.personalColor ?? null, user?.bodyType ?? null),
     }));
     scored.sort((a, b) => b.score - a.score);
 
@@ -459,6 +556,13 @@ export class CoachingService {
       const tone = resolveToneColors(user.personalColor);
       if (tone) {
         parts.push(`퍼스널컬러(${tone.label})를 고려하면 ${tone.colors.slice(0, 3).join('·')} 계열을 더하면 더 잘 어울려요.`);
+      }
+    }
+
+    if (user?.bodyType) {
+      const bodyRule = resolveBodyTypeRule(user.bodyType);
+      if (bodyRule) {
+        parts.push(`체형(${bodyRule.label})을 고려하면 ${bodyRule.tip}.`);
       }
     }
 

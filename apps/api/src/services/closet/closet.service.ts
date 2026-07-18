@@ -20,6 +20,8 @@ async createItem(userId: number, data: Omit<ClosetItem, 'id' | 'userId' | 'creat
         color: data.color,
         brand: data.brand,
         memo: data.memo,
+        fit: data.fit,
+        length: data.length,
         isFavorite: data.isFavorite ?? false,
       },
     });
@@ -54,6 +56,8 @@ async createItem(userId: number, data: Omit<ClosetItem, 'id' | 'userId' | 'creat
         color: data.color,
         brand: data.brand,
         memo: data.memo,
+        fit: data.fit,
+        length: data.length,
         isFavorite: data.isFavorite,
       },
     });
@@ -126,6 +130,8 @@ async createItem(userId: number, data: Omit<ClosetItem, 'id' | 'userId' | 'creat
       color: item.color,
       brand: item.brand || undefined,
       memo: item.memo || undefined,
+      fit: item.fit || undefined,
+      length: item.length || undefined,
       isFavorite: item.isFavorite,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),

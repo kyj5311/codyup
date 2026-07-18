@@ -10,6 +10,9 @@ import {
   CLOSET_COLOR_GROUPS,
   createEmptyDraft,
   draftToCreatePayload,
+  FIT_OPTIONS,
+  FITTABLE_CATEGORIES,
+  LENGTH_OPTIONS_BY_CATEGORY,
   type ClosetItem,
   type ClosetItemDraft,
 } from "../../types/closet";
@@ -159,6 +162,56 @@ export default function InitialClosetStep({
             />
           </div>
         </div>
+
+        {draft.category && FITTABLE_CATEGORIES.includes(draft.category) && (
+          <>
+            <div className="mt-5">
+              <span className="text-sm font-medium text-ink-soft">
+                핏 (선택) · 체형 반영 코디 추천에 사용돼요
+              </span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {FIT_OPTIONS.map((fit) => (
+                  <Chip
+                    key={fit}
+                    selected={draft.fit === fit}
+                    onClick={() =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        fit: prev.fit === fit ? null : fit,
+                      }))
+                    }
+                  >
+                    {fit}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <span className="text-sm font-medium text-ink-soft">
+                기장 (선택)
+              </span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(LENGTH_OPTIONS_BY_CATEGORY[draft.category] ?? []).map(
+                  (length) => (
+                    <Chip
+                      key={length}
+                      selected={draft.length === length}
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          length: prev.length === length ? null : length,
+                        }))
+                      }
+                    >
+                      {length}
+                    </Chip>
+                  ),
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
