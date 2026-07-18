@@ -49,7 +49,7 @@ app.post('/api/auth/token', (req, res) => {
   const token = jwt.sign(
     { id: 1, email: 'test@example.com' },
     process.env.JWT_SECRET || 'secret',
-    { expiresIn: '1h' }
+    { expiresIn: '24h' }
   );
   res.json({
     success: true,
