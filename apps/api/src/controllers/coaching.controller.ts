@@ -129,4 +129,25 @@ export class CoachingController {
       } as ApiResponse);
     }
   }
+
+  async getDashboardSummary(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = getUserId(req, res);
+      if (userId === null) return;
+
+      const result = await coachingService.getDashboardSummary(userId);
+      res.status(200).json({
+        success: true,
+        data: result,
+        error: null,
+      } as ApiResponse);
+    } catch (error) {
+      console.error('홈 대시보드 요약 오류:', error);
+      res.status(500).json({
+        success: false,
+        data: null,
+        error: { code: 'EVAL_004', message: '홈 대시보드 요약 조회에 실패했습니다.' },
+      } as ApiResponse);
+    }
+  }
 }

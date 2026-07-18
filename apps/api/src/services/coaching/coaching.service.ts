@@ -1,9 +1,11 @@
 // apps/api/src/services/coaching/coaching.service.ts
 
 import { PrismaClient, ClosetItem as PrismaClosetItem } from '@prisma/client';
-import { CoordiEvaluationResult, CoordiRecommendation } from '../../types';
+import { CoordiEvaluationResult, CoordiRecommendation, DashboardSummary } from '../../types';
+import { RoadmapService } from '../roadmap/roadmap.service';
 
 const prisma = new PrismaClient();
+const roadmapService = new RoadmapService();
 
 // 팔레트의 "무채색/기본" 그룹과 동일한 기준 — 색상 궁합(isNeutralHsl) 판정과 통일
 const NEUTRAL_COLORS = [
@@ -305,7 +307,11 @@ export class CoachingService {
     };
   }
 
-  async getRecommendations(userId: number): Promise<CoordiRecommendation[]> {
+  // 옷장에서 상의·하의(+아우터/신발) 조합을 만들고 점수순으로 정렬한 뒤,
+  // 상의·하의 조합이 겹치지 않는 상위 3개를 뽑음 (추천/오늘의 코디에서 공용으로 사용)
+  private async computeTopCombos(
+    userId: number,
+  ): Promise<Array<{ combo: PrismaClosetItem[] } & ScoredCombo>> {
     const [user, items] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId } }),
       prisma.closetItem.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
@@ -361,6 +367,12 @@ export class CoachingService {
       if (top3.length === 3) break;
       if (!top3.includes(entry)) top3.push(entry);
     }
+
+    return top3;
+  }
+
+  async getRecommendations(userId: number): Promise<CoordiRecommendation[]> {
+    const top3 = await this.computeTopCombos(userId);
 
     return top3.map((entry, index) => {
       const topItem = entry.combo.find((i) => i.category === '상의');
@@ -429,5 +441,52 @@ export class CoachingService {
       title: rec.title,
       itemIds: rec.closetItemIds,
     }));
+  }
+
+  // 홈 대시보드 요약 — 옷장 완성도(BE1 데이터) + 오늘의 추천 코디/다음 로드맵 아이템/최근 평가 점수(BE2 데이터)
+  async getDashboardSummary(userId: number): Promise<DashboardSummary> {
+    const [user, closetItems, top3, roadmap] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      prisma.closetItem.findMany({ where: { userId } }),
+      this.computeTopCombos(userId),
+      roadmapService.getOrCreateForUser(userId),
+    ]);
+
+    const categoryCounts: Record<string, number> = {};
+    closetItems.forEach((item) => {
+      categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
+    });
+    const requiredCategories = ['상의', '하의', '아우터', '신발'];
+    const presentCount = requiredCategories.filter((c) => categoryCounts[c]).length;
+    const closetCompletionPercent = Math.round((presentCount / requiredCategories.length) * 100);
+
+    const top = top3[0] ?? null;
+    const todayCoordi = top
+      ? top.combo.map((item) => ({
+          id: String(item.id),
+          imageUrl: item.imageUrl || null,
+          colorHex: COLOR_HEX[item.color] ?? '#cccccc',
+          colorName: item.color,
+          label: item.category,
+        }))
+      : [];
+
+    const nextRoadmapCandidate =
+      roadmap.items.find((item) => !item.isPurchased) ?? roadmap.items[0] ?? null;
+    const nextRoadmapItem = nextRoadmapCandidate
+      ? {
+          id: String(nextRoadmapCandidate.id),
+          itemName: nextRoadmapCandidate.itemName,
+          estimatedPriceKrw: nextRoadmapCandidate.estimatedPriceKrw,
+        }
+      : null;
+
+    return {
+      nickname: user?.email ? user.email.split('@')[0] : '코디업러',
+      closetCompletionPercent,
+      todayCoordi,
+      nextRoadmapItem,
+      latestEvaluationScore: top ? top.score : null,
+    };
   }
 }

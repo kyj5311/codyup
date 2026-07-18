@@ -95,3 +95,25 @@ export interface CoordiRecommendation {
   closetItemIds: number[];
   reason: string;
 }
+
+export interface DashboardTodayCoordiItem {
+  id: string;
+  imageUrl: string | null;
+  colorHex: string;
+  colorName: string;
+  label: string;
+}
+
+export interface DashboardNextRoadmapItem {
+  id: string;
+  itemName: string;
+  estimatedPriceKrw: number;
+}
+
+export interface DashboardSummary {
+  nickname: string;
+  closetCompletionPercent: number;
+  todayCoordi: DashboardTodayCoordiItem[];
+  nextRoadmapItem: DashboardNextRoadmapItem | null;
+  latestEvaluationScore: number | null;
+}
