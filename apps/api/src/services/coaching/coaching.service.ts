@@ -482,29 +482,12 @@ export class CoachingService {
       prisma.closetItem.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
     ]);
 
-    // 카테고리별 후보를 뽑을 때 즐겨찾기를 우선하되, 같은 색상만 계속 뽑히지 않도록
-    // 색상이 겹치지 않는 아이템을 먼저 채우고 남는 자리를 나머지로 채움.
-    // (예전엔 그냥 상위 2개만 뽑아서, 최근 등록된 아이템이 우연히 같은 색이면
-    //  추천 3개가 전부 비슷한 색 조합으로 보이는 문제가 있었음)
-    const byCategory = (category: string) => {
-      const sorted = items
-        .filter((i) => i.category === category)
-        .sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite));
-
-      const picked: PrismaClosetItem[] = [];
-      const usedColors = new Set<string>();
-      for (const item of sorted) {
-        if (picked.length >= 3) break;
-        if (usedColors.has(item.color)) continue;
-        picked.push(item);
-        usedColors.add(item.color);
-      }
-      for (const item of sorted) {
-        if (picked.length >= 3) break;
-        if (!picked.includes(item)) picked.push(item);
-      }
-      return picked;
-    };
+    // 카테고리별 후보 아이템 — 예전엔 색상 다양성을 위해 카테고리당 상위 3개로 제한했는데,
+    // 그러면 후보 풀 밖의 아이템으로만 만들 수 있는 진짜 최고점 조합이 추천에서 아예 빠지는
+    // 문제가 있었음(예: 90점 조합이 후보 제한 때문에 75점 조합에 밀려 안 보임).
+    // 옷장 규모가 작아(카테고리당 수십 벌 이하) 전체 조합을 다 계산해도 충분히 빠르므로
+    // 후보를 제한하지 않고 전부 사용 — 최종 3개 노출 시의 색상 다양성은 아래 선정 로직이 담당.
+    const byCategory = (category: string) => items.filter((i) => i.category === category);
 
     const tops = byCategory('상의');
     const bottoms = byCategory('하의');
