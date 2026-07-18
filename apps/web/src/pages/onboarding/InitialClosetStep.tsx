@@ -10,9 +10,6 @@ import {
   CLOSET_COLOR_GROUPS,
   createEmptyDraft,
   draftToCreatePayload,
-  FIT_OPTIONS,
-  FITTABLE_CATEGORIES,
-  LENGTH_OPTIONS_BY_CATEGORY,
   type ClosetItem,
   type ClosetItemDraft,
 } from "../../types/closet";
@@ -67,7 +64,7 @@ export default function InitialClosetStep({
         setError(res.error?.message ?? "등록에 실패했어요. 다시 시도해 주세요.");
       }
     } catch {
-      setError("서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.");
+      setError("서버에 연결할 수 없어요. 다시 시도해 주세요.");
     } finally {
       setIsSaving(false);
     }
@@ -95,6 +92,7 @@ export default function InitialClosetStep({
                 key={item.id}
                 imageUrl={item.imageUrl}
                 alt={`${item.category} 등록 완료`}
+                category={item.category}
                 className="h-16 w-16 shrink-0"
               />
             ))}
@@ -128,9 +126,7 @@ export default function InitialClosetStep({
               <p className="text-[15px] font-medium text-ink">
                 사진을 업로드해 주세요
               </p>
-              <p className="mt-1 text-xs text-gray-text">
-                JPG, PNG / 최대 30MB · 1:1 비율 이미지를 권장해요
-              </p>
+              <p className="mt-1 text-xs text-gray-text">JPG, PNG / 최대 30MB</p>
             </>
           )}
         </Card>
@@ -162,56 +158,6 @@ export default function InitialClosetStep({
             />
           </div>
         </div>
-
-        {draft.category && FITTABLE_CATEGORIES.includes(draft.category) && (
-          <>
-            <div className="mt-5">
-              <span className="text-sm font-medium text-ink-soft">
-                핏 (선택) · 체형 반영 코디 추천에 사용돼요
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {FIT_OPTIONS.map((fit) => (
-                  <Chip
-                    key={fit}
-                    selected={draft.fit === fit}
-                    onClick={() =>
-                      setDraft((prev) => ({
-                        ...prev,
-                        fit: prev.fit === fit ? null : fit,
-                      }))
-                    }
-                  >
-                    {fit}
-                  </Chip>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <span className="text-sm font-medium text-ink-soft">
-                기장 (선택)
-              </span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(LENGTH_OPTIONS_BY_CATEGORY[draft.category] ?? []).map(
-                  (length) => (
-                    <Chip
-                      key={length}
-                      selected={draft.length === length}
-                      onClick={() =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          length: prev.length === length ? null : length,
-                        }))
-                      }
-                    >
-                      {length}
-                    </Chip>
-                  ),
-                )}
-              </div>
-            </div>
-          </>
-        )}
 
         {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
