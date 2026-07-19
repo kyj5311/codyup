@@ -107,7 +107,7 @@ export default function ClosetHome({
         type="button"
         onClick={onAddNew}
         aria-label="옷 등록하기"
-        className="fixed bottom-8 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-yellow text-ink shadow-lg"
+        className="fixed bottom-24 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-yellow text-ink shadow-lg"
       >
         <Plus size={26} strokeWidth={2} />
       </button>

@@ -92,7 +92,7 @@ export default function CoordiEvaluationPanel({
       </div>
 
       {selectedItems.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-3 overflow-x-auto p-2">
           {selectedItems.map((item) => (
             <ClosetItemThumbnail
               key={item.id}
