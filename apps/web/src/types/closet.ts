@@ -195,10 +195,10 @@ export function createEmptyDraft(): ClosetItemDraft {
 export function draftToCreatePayload(
   draft: ClosetItemDraft,
 ): ClosetItemCreatePayload | null {
-  if (!draft.imageUrl || !draft.category || !draft.color) return null;
+  if (!draft.category || !draft.color) return null;
   const isFittable = FITTABLE_CATEGORIES.includes(draft.category);
   return {
-    imageUrl: draft.imageUrl,
+    imageUrl: draft.imageUrl ?? "",
     category: draft.category,
     color: draft.color,
     brand: draft.brand || undefined,
