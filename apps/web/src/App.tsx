@@ -47,7 +47,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
         {screen === "home" && (
           <DashboardHome
             onNavigateStylePlan={() => setScreen("style-plan")}
