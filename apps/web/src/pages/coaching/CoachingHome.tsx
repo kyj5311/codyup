@@ -92,7 +92,7 @@ export default function CoachingHome({ initialTab = "평가" }: CoachingHomeProp
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <PageHeader title="코디 코칭" />
+      <PageHeader />
 
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
 import { fetchDashboardSummary } from "../../api/dashboard-api";
 import type { DashboardSummary } from "../../types/dashboard";
+import PageHeader from "../../components/PageHeader";
 import TodayCoordiSwatch from "./components/TodayCoordiSwatch";
 
 interface DashboardHomeProps {
@@ -36,17 +36,7 @@ export default function DashboardHome({
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <Menu size={22} className="text-ink" />
-        <p
-          className="text-2xl text-ink"
-          style={{ fontFamily: "'Brush Script MT', cursive" }}
-        >
-          Codyup
-        </p>
-        <span className="w-[22px]" />
-      </div>
+      <PageHeader />
 
       {isLoading || !summary ? (
         <p className="py-8 text-center text-sm text-gray-text">

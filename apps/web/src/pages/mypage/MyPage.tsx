@@ -202,7 +202,7 @@ export default function MyPage() {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <PageHeader title="마이페이지" />
+      <PageHeader />
       <div>
         <p className="text-[15px] font-medium text-ink">{profile.nickname}</p>
         <p className="text-sm text-gray-text">{profile.email}</p>

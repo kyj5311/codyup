@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { Bell, ChevronRight, Menu, PieChart, Plus } from "lucide-react";
+import { ChevronRight, PieChart, Plus } from "lucide-react";
 import Tabs from "../../components/Tabs";
 import Card from "../../components/Card";
 import ClosetItemThumbnail from "../../components/ClosetItemThumbnail";
+import PageHeader from "../../components/PageHeader";
 import type { ClosetItem, ClothingCategory } from "../../types/closet";
 
 const TABS = ["전체", "상의", "하의", "아우터", "신발", "악세서리"] as const;
@@ -37,15 +38,7 @@ export default function ClosetHome({
 
   return (
     <div className="min-h-full pb-24">
-      <header className="flex items-center justify-between py-2">
-        <button type="button" aria-label="메뉴" className="text-ink">
-          <Menu size={22} strokeWidth={1.75} />
-        </button>
-        <h1 className="text-lg font-bold text-ink">내옷장</h1>
-        <button type="button" aria-label="알림" className="text-ink">
-          <Bell size={22} strokeWidth={1.75} />
-        </button>
-      </header>
+      <PageHeader />
 
       {isMockData && (
         <p className="mt-2 rounded-xl bg-cream-deep px-3 py-1.5 text-xs text-gray-text">
