@@ -20,7 +20,7 @@ const SLIDES: SlideContent[] = [
     eyebrow: "옷장 관리",
     title: "가진 옷,\n한눈에 정리해요",
     description:
-      "옷장 속 옷을 사진 · 카테고리 · 색상 · 계절의 속성으로 정리해요.",
+      "옷장 속 옷을 사진 · 카테고리 · 색상 · 핏의 속성으로 정리해요.",
     tone: "cream",
   },
   {
