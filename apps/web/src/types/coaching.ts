@@ -18,6 +18,7 @@ export interface CoordiEvaluationResult {
 export interface CoordiRecommendation {
   id: string;
   title: string;
+  score: number;
   closetItemIds: number[];
   reason: string;
 }

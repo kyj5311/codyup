@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Card from "../../../components/Card";
 import ClosetItemThumbnail from "../../../components/ClosetItemThumbnail";
+import ClosetItemDetailModal from "../../../components/ClosetItemDetailModal";
 import { fetchCoordiRecommendations } from "../../../api/coaching-api";
 import type { CoordiRecommendation } from "../../../types/coaching";
 import type { ClosetItem } from "../../../types/closet";
@@ -14,6 +15,7 @@ export default function CoordiRecommendationPanel({
 }: CoordiRecommendationPanelProps) {
   const [recommendations, setRecommendations] = useState<CoordiRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [detailItem, setDetailItem] = useState<ClosetItem | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -47,7 +49,12 @@ export default function CoordiRecommendationPanel({
     <div className="flex flex-col gap-4">
       {recommendations.map((rec) => (
         <Card key={rec.id} tone="cream">
-          <p className="text-[15px] font-semibold text-ink">{rec.title}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-[15px] font-semibold text-ink">{rec.title}</p>
+            <span className="rounded-full bg-cream-deep px-2.5 py-1 text-xs font-semibold text-ink">
+              {rec.score}점
+            </span>
+          </div>
           <p className="mt-1 text-sm text-ink-soft">{rec.reason}</p>
           <div className="mt-3 flex gap-2">
             {rec.closetItemIds.map((id) => {
@@ -57,13 +64,17 @@ export default function CoordiRecommendationPanel({
                   key={id}
                   imageUrl={item?.imageUrl ?? null}
                   alt={item ? `${item.color} ${item.category}` : "옷"}
+                  category={item?.category}
                   className="aspect-square w-16"
+                  onClick={item ? () => setDetailItem(item) : undefined}
                 />
               );
             })}
           </div>
         </Card>
       ))}
+
+      <ClosetItemDetailModal item={detailItem} onClose={() => setDetailItem(null)} />
     </div>
   );
 }

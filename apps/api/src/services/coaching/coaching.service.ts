@@ -314,6 +314,12 @@ interface ScoredCombo {
 //   + 퍼스널컬러15 + 체형핏15 + 체형색상10 = 100, 즐겨찾기+3은 가산(클리핑으로 100 상한)
 const CORE_CATEGORIES = ['상의', '하의', '신발'];
 
+// 코디 추천에서 몇 개까지 보여줄지 — 예전엔 3개로 고정돼 있었음
+const RECOMMENDATION_COUNT = 6;
+
+// 거의 모든 유효한 코디에서 공통으로 뜨는 뻔한 문구라, 추천 이유 문구에서는 우선순위를 낮춤
+const GENERIC_COMPLETION_STRENGTH = '상의·하의·신발을 모두 갖춘 완성도 높은 코디예요';
+
 function evaluateCombo(
   items: PrismaClosetItem[],
   personalColor: string | null,
@@ -473,7 +479,7 @@ export class CoachingService {
   }
 
   // 옷장에서 상의·하의(+아우터/신발) 조합을 만들고 점수순으로 정렬한 뒤,
-  // 상의·하의 조합이 겹치지 않는 상위 3개를 뽑음 (추천/오늘의 코디에서 공용으로 사용)
+  // 상의·하의 조합이 겹치지 않는 상위 N개를 뽑음 (추천/오늘의 코디에서 공용으로 사용)
   private async computeTopCombos(
     userId: number,
   ): Promise<Array<{ combo: PrismaClosetItem[] } & ScoredCombo>> {
@@ -517,14 +523,14 @@ export class CoachingService {
     scored.sort((a, b) => b.score - a.score);
 
     // 상위 점수만 뽑으면 상의+하의 조합이 똑같고 아우터/신발만 다른 경우가 많아
-    // 추천 3개가 거의 똑같아 보임 — 상의 색상이 겹치지 않는 조합을 최우선으로,
+    // 추천이 거의 똑같아 보임 — 상의 색상이 겹치지 않는 조합을 최우선으로,
     // 그다음 상의·하의 조합 자체가 겹치지 않는 것 위주로 다양성 확보
-    const top3: typeof scored = [];
+    const selected: typeof scored = [];
     const usedPairs = new Set<string>();
     const usedTopColors = new Set<string>();
 
     for (const entry of scored) {
-      if (top3.length === 3) break;
+      if (selected.length === RECOMMENDATION_COUNT) break;
       const topItem = entry.combo.find((i) => i.category === '상의');
       const bottomItem = entry.combo.find((i) => i.category === '하의');
       const pairKey = `${topItem?.id}-${bottomItem?.id}`;
@@ -532,29 +538,29 @@ export class CoachingService {
       if (topItem && usedTopColors.has(topItem.color)) continue;
       usedPairs.add(pairKey);
       if (topItem) usedTopColors.add(topItem.color);
-      top3.push(entry);
+      selected.push(entry);
     }
     for (const entry of scored) {
-      if (top3.length === 3) break;
+      if (selected.length === RECOMMENDATION_COUNT) break;
       const topItem = entry.combo.find((i) => i.category === '상의');
       const bottomItem = entry.combo.find((i) => i.category === '하의');
       const pairKey = `${topItem?.id}-${bottomItem?.id}`;
       if (usedPairs.has(pairKey)) continue;
       usedPairs.add(pairKey);
-      top3.push(entry);
+      selected.push(entry);
     }
     for (const entry of scored) {
-      if (top3.length === 3) break;
-      if (!top3.includes(entry)) top3.push(entry);
+      if (selected.length === RECOMMENDATION_COUNT) break;
+      if (!selected.includes(entry)) selected.push(entry);
     }
 
-    return top3;
+    return selected;
   }
 
   async getRecommendations(userId: number): Promise<CoordiRecommendation[]> {
-    const top3 = await this.computeTopCombos(userId);
+    const combos = await this.computeTopCombos(userId);
 
-    return top3.map((entry, index) => {
+    return combos.map((entry, index) => {
       const topItem = entry.combo.find((i) => i.category === '상의');
       const bottomItem = entry.combo.find((i) => i.category === '하의');
       const title =
@@ -563,11 +569,17 @@ export class CoachingService {
           : `추천 코디 ${index + 1}`;
       const composition = entry.combo.map((i) => `${i.category} ${i.color}`).join(' + ');
 
+      // "상의·하의·신발을 모두 갖췄다"는 너무 당연한 말이라, 이유 문구에서는 그보다
+      // 구체적인 강점(색상 조화·퍼스널컬러·체형 매칭·즐겨찾기 등)을 우선 사용
+      const specificStrengths = entry.strengths.filter((s) => s !== GENERIC_COMPLETION_STRENGTH);
+      const highlight = specificStrengths[0] ?? entry.strengths[0] ?? entry.summary;
+
       return {
         id: `rec-${Date.now()}-${index}`,
         title,
+        score: entry.score,
         closetItemIds: entry.combo.map((i) => i.id),
-        reason: `${composition} · ${entry.strengths[0] ?? entry.summary}`,
+        reason: `${composition} · ${highlight}`,
       };
     });
   }

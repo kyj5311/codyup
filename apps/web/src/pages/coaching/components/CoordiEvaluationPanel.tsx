@@ -33,6 +33,15 @@ export default function CoordiEvaluationPanel({
     return closetItems.filter((item) => item.category === categoryTab);
   }, [closetItems, categoryTab]);
 
+  // 카테고리 필터링 중에도 지금까지 고른 옷을 한눈에 볼 수 있도록 별도로 추적
+  const selectedItems = useMemo(
+    () =>
+      selectedIds
+        .map((id) => closetItems.find((item) => item.id === id))
+        .filter((item): item is ClosetItem => item !== undefined),
+    [selectedIds, closetItems],
+  );
+
   function toggleSelect(item: ClosetItem) {
     setResult(null);
     setSelectedIds((prev) => {
@@ -81,6 +90,22 @@ export default function CoordiEvaluationPanel({
           상의·하의·아우터·신발은 하나씩만 선택돼요. 다시 누르면 다른 아이템으로 바뀌어요.
         </p>
       </div>
+
+      {selectedItems.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {selectedItems.map((item) => (
+            <ClosetItemThumbnail
+              key={item.id}
+              imageUrl={item.imageUrl || null}
+              alt={`${item.color} ${item.category}`}
+              category={item.category}
+              className="aspect-square w-16 shrink-0"
+              onClick={() => toggleSelect(item)}
+              onDelete={() => toggleSelect(item)}
+            />
+          ))}
+        </div>
+      )}
 
       <Tabs tabs={CATEGORY_TABS} active={categoryTab} onChange={setCategoryTab} />
 

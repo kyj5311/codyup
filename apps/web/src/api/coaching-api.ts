@@ -11,12 +11,14 @@ const MOCK_RECOMMENDATIONS: CoordiRecommendation[] = [
   {
     id: "rec-1",
     title: "오피스 캐주얼",
+    score: 82,
     closetItemIds: [1, 3],
     reason: "보유하신 네이비 톤 아이템으로 차분한 느낌을 냈어요.",
   },
   {
     id: "rec-2",
     title: "주말 나들이룩",
+    score: 76,
     closetItemIds: [2, 4],
     reason: "가벼운 소재끼리 매치해 편안한 인상을 줘요.",
   },
