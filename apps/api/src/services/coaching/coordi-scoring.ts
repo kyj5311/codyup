@@ -460,3 +460,32 @@ export function evaluateCombo(
 
   return { score, summary, strengths, improvements };
 }
+
+// 지금 옷장(구매 없이)만으로 만들 수 있는 상의+하의(+아우터/신발) 조합 중 최고 코디 점수 —
+// 구매 로드맵의 baseline과 "옷장 완성도" 지표가 공통으로 이 값을 사용한다.
+// 상의·하의가 하나도 없으면 조합 자체를 만들 수 없어 0점.
+export function bestAchievableScore(
+  items: ScorableItem[],
+  personalColor: string | null,
+  bodyType: string | null,
+): number {
+  const tops = items.filter((i) => i.category === '상의');
+  const bottoms = items.filter((i) => i.category === '하의');
+  if (tops.length === 0 || bottoms.length === 0) return 0;
+
+  const outers: Array<ScorableItem | null> = [null, ...items.filter((i) => i.category === '아우터')];
+  const shoes: Array<ScorableItem | null> = [null, ...items.filter((i) => i.category === '신발')];
+
+  let best = 0;
+  for (const top of tops) {
+    for (const bottom of bottoms) {
+      for (const outer of outers) {
+        for (const shoe of shoes) {
+          const combo = [top, bottom, outer, shoe].filter((i): i is ScorableItem => i !== null);
+          best = Math.max(best, evaluateCombo(combo, personalColor, bodyType).score);
+        }
+      }
+    }
+  }
+  return best;
+}

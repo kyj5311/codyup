@@ -4,6 +4,7 @@ import { PrismaClient, ClosetItem as PrismaClosetItem } from '@prisma/client';
 import { CoordiEvaluationResult, CoordiRecommendation, DashboardSummary } from '../../types';
 import { RoadmapService } from '../roadmap/roadmap.service';
 import {
+  bestAchievableScore,
   COLOR_HEX,
   evaluateCombo,
   GENERIC_COMPLETION_STRENGTH,
@@ -145,16 +146,28 @@ export class CoachingService {
     });
   }
 
-  // AI 종합 분석 — 옷장 카테고리/색상 분포와 퍼스널컬러를 바탕으로 한 텍스트 인사이트
-  async getClosetSummary(userId: number): Promise<{ summary: string }> {
+  // AI 종합 분석 — 옷장 카테고리/색상 분포와 퍼스널컬러를 바탕으로 한 텍스트 인사이트 +
+  // "옷장 완성도" 점수. 완성도는 카테고리를 하나씩만 채워도 100%가 되는 방식(예전) 대신,
+  // 코디 규칙 점수 시스템으로 "지금 옷장으로 만들 수 있는 최고 코디 점수"를 그대로 사용한다 —
+  // AI 코디 평가/추천·구매 로드맵과 동일한 기준이라 화면마다 다른 "완성도" 개념이 안 생김.
+  async getClosetSummary(userId: number): Promise<{ summary: string; completenessScore: number }> {
     const [user, items] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId } }),
       prisma.closetItem.findMany({ where: { userId } }),
     ]);
 
     if (items.length === 0) {
-      return { summary: '아직 등록된 옷이 없어요. 옷을 몇 벌 등록하면 AI가 옷장을 분석해드려요.' };
+      return {
+        summary: '아직 등록된 옷이 없어요. 옷을 몇 벌 등록하면 AI가 옷장을 분석해드려요.',
+        completenessScore: 0,
+      };
     }
+
+    const completenessScore = bestAchievableScore(
+      items,
+      user?.personalColor ?? null,
+      user?.bodyType ?? null,
+    );
 
     const categoryCounts: Record<string, number> = {};
     const colorCounts: Record<string, number> = {};
@@ -190,7 +203,7 @@ export class CoachingService {
       }
     }
 
-    return { summary: parts.join(' ') };
+    return { summary: parts.join(' '), completenessScore };
   }
 
   // 활용 가능한 코디 — 기존 코디 추천 로직을 재사용해 화면용 요약 형태로 변환
@@ -203,24 +216,17 @@ export class CoachingService {
     }));
   }
 
-  // 홈 대시보드 요약 — 옷장 완성도(BE1 데이터) + 오늘의 추천 코디/다음 로드맵 아이템/최근 평가 점수(BE2 데이터)
+  // 홈 대시보드 요약 — 오늘의 추천 코디/다음 로드맵 아이템/최근 평가 점수 + 옷장 완성도(전부 BE2 코디 점수 시스템 기준)
   async getDashboardSummary(userId: number): Promise<DashboardSummary> {
-    const [user, closetItems, top3, roadmap] = await Promise.all([
+    const [user, top3, roadmap] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId } }),
-      prisma.closetItem.findMany({ where: { userId } }),
       this.computeTopCombos(userId),
       roadmapService.getOrCreateForUser(userId),
     ]);
 
-    const categoryCounts: Record<string, number> = {};
-    closetItems.forEach((item) => {
-      categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
-    });
-    const requiredCategories = ['상의', '하의', '아우터', '신발'];
-    const presentCount = requiredCategories.filter((c) => categoryCounts[c]).length;
-    const closetCompletionPercent = Math.round((presentCount / requiredCategories.length) * 100);
-
     const top = top3[0] ?? null;
+    // 옷장 완성도 = 지금 옷장으로 만들 수 있는 최고 코디 점수 (AI 옷장 분석의 완성도와 동일 기준)
+    const closetCompletionPercent = top ? top.score : 0;
     const todayCoordi = top
       ? top.combo.map((item) => ({
           id: String(item.id),

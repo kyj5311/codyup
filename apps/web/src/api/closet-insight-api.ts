@@ -8,6 +8,9 @@ import { httpClient, type ApiResponse } from "./http-client";
 
 export interface AiClosetSummary {
   summary: string;
+  // 카테고리를 1개씩만 채워도 100%였던 예전 방식 대신, 코디 규칙 점수 시스템으로
+  // "지금 옷장으로 만들 수 있는 최고 코디 점수"(0~100)를 그대로 완성도로 사용
+  completenessScore: number;
 }
 
 export interface UsableCoordi {

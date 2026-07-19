@@ -14,7 +14,6 @@ import {
   MOCK_CLOSET_ANALYSIS,
   MOCK_MISSING_ITEMS,
 } from "../../utils/mock-closet-data";
-import { CATEGORIES } from "../../types/closet";
 import type { ClosetAnalysis, MissingClosetItem } from "../../types/closet";
 
 interface ClosetAnalysisViewProps {
@@ -32,6 +31,9 @@ export default function ClosetAnalysisView({
   const [isMockData, setIsMockData] = useState(false);
 
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  // 카테고리를 1개씩만 채워도 100%였던 예전 방식 대신, 코디 규칙 점수 시스템 기준
+  // "지금 옷장으로 만들 수 있는 최고 코디 점수"를 완성도로 사용 (BE2 /coaching/closet-summary)
+  const [completenessScore, setCompletenessScore] = useState<number | null>(null);
   const [usableCoordis, setUsableCoordis] = useState<UsableCoordi[]>([]);
 
   useEffect(() => {
@@ -64,13 +66,15 @@ export default function ClosetAnalysisView({
         if (isMounted) setIsLoading(false);
       });
 
-    // AI 종합 분석 / 활용 가능한 코디 — TODO(BE2): 아직 API 없음, 준비 중 상태로 표시
+    // AI 종합 분석 / 옷장 완성도 점수 — BE2 연동: GET /coaching/closet-summary
     fetchAiClosetSummary()
       .then((res) => {
-        if (isMounted && res.success && res.data) setAiSummary(res.data.summary);
+        if (!isMounted || !res.success || !res.data) return;
+        setAiSummary(res.data.summary);
+        setCompletenessScore(res.data.completenessScore);
       })
       .catch(() => {
-        // BE2 엔드포인트 준비 전 — 화면엔 "준비 중"으로 안내
+        // BE2 엔드포인트 연결 실패 — 화면엔 "준비 중"으로 안내
       });
 
     fetchUsableCoordis()
@@ -92,14 +96,6 @@ export default function ClosetAnalysisView({
       )
     : [];
   const maxCategoryCount = Math.max(1, ...categoryEntries.map(([, c]) => c));
-
-  const completenessPercent = analysis
-    ? Math.round(
-        ((CATEGORIES.length - analysis.missingCategories.length) /
-          CATEGORIES.length) *
-          100,
-      )
-    : 0;
 
   // 활용 가능한 코디 추천은 상의·하의가 하나씩은 있어야 조합이 나옴 —
   // 둘 중 하나라도 없어서 빈 배열이 온 것인지, 진짜 준비 중인지 구분해서 안내
@@ -147,13 +143,24 @@ export default function ClosetAnalysisView({
             <Card tone="yellow" className="mt-2">
               <div className="flex items-baseline justify-between">
                 <p className="text-3xl font-bold text-ink">
-                  {completenessPercent}
-                  <span className="text-base font-medium text-ink-soft">%</span>
+                  {completenessScore === null ? (
+                    "–"
+                  ) : (
+                    <>
+                      {completenessScore}
+                      <span className="text-base font-medium text-ink-soft">%</span>
+                    </>
+                  )}
                 </p>
                 <p className="text-sm text-ink-soft">
                   등록된 옷 {analysis?.totalItems ?? 0}개
                 </p>
               </div>
+              <p className="mt-1 text-xs text-gray-text">
+                {completenessScore !== null && !hasTopsAndBottoms
+                  ? "상의·하의를 하나씩 등록하면 완성도를 확인할 수 있어요"
+                  : "지금 옷장으로 만들 수 있는 최고 코디 점수예요"}
+              </p>
 
               {categoryEntries.length > 0 && (
                 <div className="mt-4 flex flex-col gap-2">

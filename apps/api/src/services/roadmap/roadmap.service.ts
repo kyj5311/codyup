@@ -2,7 +2,14 @@
 
 import { PrismaClient } from '@prisma/client';
 import { RoadmapData, RoadmapItem, RoadmapPriority } from '../../types';
-import { COLOR_HEX, evaluateCombo, GENERIC_COMPLETION_STRENGTH, resolveBodyTypeRule, type ScorableItem } from '../coaching/coordi-scoring';
+import {
+  bestAchievableScore,
+  COLOR_HEX,
+  evaluateCombo,
+  GENERIC_COMPLETION_STRENGTH,
+  resolveBodyTypeRule,
+  type ScorableItem,
+} from '../coaching/coordi-scoring';
 
 const prisma = new PrismaClient();
 
@@ -53,34 +60,6 @@ interface GeneratedItem {
 
 const FITTABLE_CATEGORIES = ['상의', '하의', '아우터'] as const;
 type FittableCategory = (typeof FITTABLE_CATEGORIES)[number];
-
-// 옷장 아이템만으로(구매 없이) 만들 수 있는 상의+하의(+아우터/신발) 조합 중 최고 점수 —
-// coaching의 evaluateCombo와 동일한 "코디 규칙" 점수 시스템을 그대로 재사용
-function bestAchievableScore(
-  items: ScorableItem[],
-  personalColor: string | null,
-  bodyType: string | null,
-): number {
-  const tops = items.filter((i) => i.category === '상의');
-  const bottoms = items.filter((i) => i.category === '하의');
-  if (tops.length === 0 || bottoms.length === 0) return 0;
-
-  const outers: Array<ScorableItem | null> = [null, ...items.filter((i) => i.category === '아우터')];
-  const shoes: Array<ScorableItem | null> = [null, ...items.filter((i) => i.category === '신발')];
-
-  let best = 0;
-  for (const top of tops) {
-    for (const bottom of bottoms) {
-      for (const outer of outers) {
-        for (const shoe of shoes) {
-          const combo = [top, bottom, outer, shoe].filter((i): i is ScorableItem => i !== null);
-          best = Math.max(best, evaluateCombo(combo, personalColor, bodyType).score);
-        }
-      }
-    }
-  }
-  return best;
-}
 
 // 아직 사지 않은 후보 아이템을 옷장에 더했을 때 달성 가능한 최고 점수 —
 // 후보는 자기 카테고리 슬롯에 고정하고 나머지 슬롯은 기존 옷장에서 최적 조합을 탐색
