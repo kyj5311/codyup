@@ -66,7 +66,15 @@ export default function App() {
             }}
           />
         )}
-        {screen === "closet" && <ClosetFlow initialView={closetEntryView} />}
+        {screen === "closet" && (
+          <ClosetFlow
+            initialView={closetEntryView}
+            onNavigateToRecommendation={() => {
+              setCoachingEntryTab("추천");
+              setScreen("coaching");
+            }}
+          />
+        )}
         {screen === "style-plan" && <StylePlanHome />}
         {screen === "coaching" && <CoachingHome initialTab={coachingEntryTab} />}
         {screen === "mypage" && <MyPage />}

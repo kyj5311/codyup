@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Layers, Shirt, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Layers, Shirt, Sparkles } from "lucide-react";
 import Card from "../../components/Card";
 import {
   fetchClosetAnalysis,
@@ -18,12 +18,15 @@ import type { ClosetAnalysis, MissingClosetItem } from "../../types/closet";
 
 interface ClosetAnalysisViewProps {
   onBack: () => void;
+  // 지정하면 "활용 가능한 코디" 섹션을 눌렀을 때 코디 코칭(추천 탭)으로 이동.
+  onNavigateToRecommendation?: () => void;
 }
 
 const CATEGORY_BAR_COLOR = "#f0c452";
 
 export default function ClosetAnalysisView({
   onBack,
+  onNavigateToRecommendation,
 }: ClosetAnalysisViewProps) {
   const [analysis, setAnalysis] = useState<ClosetAnalysis | null>(null);
   const [missing, setMissing] = useState<MissingClosetItem[]>([]);
@@ -209,34 +212,46 @@ export default function ClosetAnalysisView({
             </Card>
           </section>
 
-          {/* 3. 활용 가능한 코디 */}
-          <section>
-            <div className="flex items-center gap-1.5">
-              <Shirt size={16} strokeWidth={2} className="text-ink" />
-              <p className="text-sm font-semibold text-ink-soft">
-                활용 가능한 코디
-              </p>
-            </div>
-            {usableCoordis.length > 0 ? (
-              <div className="mt-2 flex flex-col gap-2">
-                {usableCoordis.map((coordi) => (
-                  <Card key={coordi.id} tone="cream">
-                    <p className="text-[15px] font-medium text-ink">
-                      {coordi.title}
-                    </p>
-                  </Card>
-                ))}
+          {/* 3. 활용 가능한 코디 — 누르면 코디 코칭(추천 탭)으로 이동 */}
+          <button
+            type="button"
+            onClick={onNavigateToRecommendation}
+            disabled={!onNavigateToRecommendation}
+            className="block w-full text-left"
+          >
+            <section>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Shirt size={16} strokeWidth={2} className="text-ink" />
+                  <p className="text-sm font-semibold text-ink-soft">
+                    활용 가능한 코디
+                  </p>
+                </div>
+                {onNavigateToRecommendation && (
+                  <ChevronRight size={16} strokeWidth={2} className="text-ink-soft" />
+                )}
               </div>
-            ) : (
-              <Card tone="cream" className="mt-2">
-                <p className="text-sm text-gray-text">
-                  {hasTopsAndBottoms
-                    ? "활용 가능한 코디 추천은 준비 중이에요. 곧 만나보실 수 있어요."
-                    : "상의·하의를 하나씩 등록하면 AI가 활용 가능한 코디를 추천해드려요."}
-                </p>
-              </Card>
-            )}
-          </section>
+              {usableCoordis.length > 0 ? (
+                <div className="mt-2 flex flex-col gap-2">
+                  {usableCoordis.map((coordi) => (
+                    <Card key={coordi.id} tone="cream">
+                      <p className="text-[15px] font-medium text-ink">
+                        {coordi.title}
+                      </p>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card tone="cream" className="mt-2">
+                  <p className="text-sm text-gray-text">
+                    {hasTopsAndBottoms
+                      ? "활용 가능한 코디 추천은 준비 중이에요. 곧 만나보실 수 있어요."
+                      : "상의·하의를 하나씩 등록하면 AI가 활용 가능한 코디를 추천해드려요."}
+                  </p>
+                </Card>
+              )}
+            </section>
+          </button>
 
           {/* 4. 부족한 아이템 */}
           {missing.length > 0 && (

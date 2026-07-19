@@ -19,9 +19,14 @@ interface ClosetFlowProps {
   // 대시보드의 "AI 분석" 버튼처럼 옷장이 아닌 분석 화면으로 바로 진입해야 하는 경우 사용.
   // 지정하지 않으면 기존과 동일하게 목록 화면부터 시작.
   initialView?: View;
+  // AI 옷장 분석 결과의 "활용 가능한 코디" 섹션에서 코디 코칭(추천 탭)으로 이동할 때 사용.
+  onNavigateToRecommendation?: () => void;
 }
 
-export default function ClosetFlow({ initialView = "list" }: ClosetFlowProps) {
+export default function ClosetFlow({
+  initialView = "list",
+  onNavigateToRecommendation,
+}: ClosetFlowProps) {
   const [view, setView] = useState<View>(initialView);
   const [items, setItems] = useState<ClosetItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -151,7 +156,10 @@ export default function ClosetFlow({ initialView = "list" }: ClosetFlowProps) {
       )}
 
       {view === "analysis" && (
-        <ClosetAnalysisView onBack={() => setView("list")} />
+        <ClosetAnalysisView
+          onBack={() => setView("list")}
+          onNavigateToRecommendation={onNavigateToRecommendation}
+        />
       )}
 
       {view === "register" && (
