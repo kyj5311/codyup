@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
 import Button from "../../../components/Button";
 import ClosetItemThumbnail from "../../../components/ClosetItemThumbnail";
+import Tabs from "../../../components/Tabs";
 import { evaluateCoordi } from "../../../api/coaching-api";
 import type { CoordiEvaluationResult } from "../../../types/coaching";
 import type { ClosetItem, ClothingCategory } from "../../../types/closet";
@@ -14,6 +15,10 @@ interface CoordiEvaluationPanelProps {
 // (악세서리는 여러 개 같이 착용 가능하니 제외)
 const SINGLE_SELECT_CATEGORIES: ClothingCategory[] = ["상의", "하의", "아우터", "신발"];
 
+// 내 옷장 화면과 동일한 카테고리 필터 — 옷이 많을 때 원하는 아이템을 빨리 찾기 위함
+const CATEGORY_TABS = ["전체", "상의", "하의", "아우터", "신발", "악세서리"] as const;
+type CategoryTab = (typeof CATEGORY_TABS)[number];
+
 export default function CoordiEvaluationPanel({
   closetItems,
 }: CoordiEvaluationPanelProps) {
@@ -21,6 +26,12 @@ export default function CoordiEvaluationPanel({
   const [result, setResult] = useState<CoordiEvaluationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [categoryTab, setCategoryTab] = useState<CategoryTab>("전체");
+
+  const filteredItems = useMemo(() => {
+    if (categoryTab === "전체") return closetItems;
+    return closetItems.filter((item) => item.category === categoryTab);
+  }, [closetItems, categoryTab]);
 
   function toggleSelect(item: ClosetItem) {
     setResult(null);
@@ -71,22 +82,31 @@ export default function CoordiEvaluationPanel({
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        {closetItems.map((item) => (
-          <ClosetItemThumbnail
-            key={item.id}
-            imageUrl={item.imageUrl || null}
-            alt={`${item.color} ${item.category}`}
-            onClick={() => toggleSelect(item)}
-            className={[
-              "aspect-square w-full",
-              selectedIds.includes(item.id)
-                ? "ring-2 ring-ink ring-offset-2 ring-offset-cream"
-                : "",
-            ].join(" ")}
-          />
-        ))}
-      </div>
+      <Tabs tabs={CATEGORY_TABS} active={categoryTab} onChange={setCategoryTab} />
+
+      {filteredItems.length === 0 ? (
+        <p className="py-8 text-center text-sm text-gray-text">
+          이 카테고리엔 등록된 옷이 없어요.
+        </p>
+      ) : (
+        <div className="grid grid-cols-3 gap-3">
+          {filteredItems.map((item) => (
+            <ClosetItemThumbnail
+              key={item.id}
+              imageUrl={item.imageUrl || null}
+              alt={`${item.color} ${item.category}`}
+              category={item.category}
+              onClick={() => toggleSelect(item)}
+              className={[
+                "aspect-square w-full",
+                selectedIds.includes(item.id)
+                  ? "ring-2 ring-ink ring-offset-2 ring-offset-cream"
+                  : "",
+              ].join(" ")}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="sticky bottom-0 -mx-5 bg-cream px-5 pb-3 pt-2">
         <Button

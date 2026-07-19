@@ -130,7 +130,7 @@ export default function ClosetFlow({ initialView = "list" }: ClosetFlowProps) {
   }
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[480px] bg-cream px-6 pt-8">
+    <div className="p-5">
       {view === "list" && (
         <ClosetHome
           items={items}

@@ -229,7 +229,7 @@ export default function ClosetItemForm({
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px] bg-cream px-6 pb-8 pt-3">
+      <div className="fixed inset-x-0 bottom-0 bg-cream px-6 pb-8 pt-3">
         <Button
           onClick={() => onSubmit(draft)}
           disabled={!canSubmit || isSaving}
