@@ -1,4 +1,5 @@
-import { Mail, X } from "lucide-react";
+import { LogOut, Mail, X } from "lucide-react";
+import { getLoggedInRole, logout } from "../api/auth-api";
 
 interface AppMenuSheetProps {
   onClose: () => void;
@@ -7,8 +8,17 @@ interface AppMenuSheetProps {
 const APP_VERSION_LABEL = "베타";
 const CONTACT_EMAIL = "kyj5311kr@gmail.com";
 
-/** 헤더 햄버거 메뉴를 누르면 뜨는 바텀시트 — 앱 정보/버전, 문의하기만 담은 최소 메뉴. */
+/** 헤더 햄버거 메뉴를 누르면 뜨는 바텀시트 — 앱 정보/버전, 문의하기, 로그아웃만 담은 최소 메뉴. */
 export default function AppMenuSheet({ onClose }: AppMenuSheetProps) {
+  const role = getLoggedInRole();
+
+  function handleLogout() {
+    logout();
+    // App.tsx의 로그인 상태는 마운트 시 localStorage 기준으로만 정해지므로,
+    // 프롭 드릴링 없이 가장 간단하게 초기화하려고 새로고침으로 로그인 화면을 다시 띄움.
+    window.location.reload();
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
@@ -45,6 +55,17 @@ export default function AppMenuSheet({ onClose }: AppMenuSheetProps) {
               {CONTACT_EMAIL}
             </span>
           </a>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center justify-between py-4 text-left"
+          >
+            <span className="font-medium text-ink">로그아웃</span>
+            <span className="flex items-center gap-1.5 text-danger">
+              {role && `${role} 계정`}
+              <LogOut size={14} strokeWidth={2} />
+            </span>
+          </button>
         </div>
       </div>
     </div>

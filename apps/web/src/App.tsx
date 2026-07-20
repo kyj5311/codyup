@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import LoginScreen from "./pages/auth/LoginScreen";
 import OnboardingFlow from "./pages/onboarding/OnboardingFlow";
 import ClosetFlow from "./pages/closet/ClosetFlow";
 import DashboardHome from "./pages/dashboard/DashboardHome";
@@ -6,12 +7,14 @@ import StylePlanHome from "./pages/style-plan/StylePlanHome";
 import CoachingHome from "./pages/coaching/CoachingHome";
 import MyPage from "./pages/mypage/MyPage";
 import BottomNavBar, { type NavTab } from "./components/BottomNavBar";
-import { ensureTestToken } from "./api/auth-api";
+import { getLoggedInRole } from "./api/auth-api";
 import type { OnboardingState } from "./types/onboarding";
 
 type Screen = "onboarding" | NavTab;
 
 export default function App() {
+  // 부스 계정(FE1/FE2/BE1/BE2/Planner/Designer) 로그인 여부 — 저장된 토큰이 있으면 통과
+  const [isLoggedIn, setIsLoggedIn] = useState(() => getLoggedInRole() !== null);
   const [screen, setScreen] = useState<Screen>("onboarding");
   // "내 옷장" 탭으로 평범하게 들어갈 땐 목록부터, 대시보드의 "AI 분석"으로
   // 들어갈 땐 분석 화면부터 보여주기 위한 진입점 구분.
@@ -24,11 +27,6 @@ export default function App() {
     "평가",
   );
 
-  useEffect(() => {
-    // BE1 명세서: POST /auth/token으로 테스트 토큰 발급 (로그인 화면 생기기 전 임시)
-    ensureTestToken();
-  }, []);
-
   function handleOnboardingFinish(state: OnboardingState) {
     console.log("온보딩 완료", state);
     setScreen("home");
@@ -39,6 +37,10 @@ export default function App() {
     if (tab === "closet") setClosetEntryView("list");
     if (tab === "coaching") setCoachingEntryTab("평가");
     setScreen(tab);
+  }
+
+  if (!isLoggedIn) {
+    return <LoginScreen onSuccess={() => setIsLoggedIn(true)} />;
   }
 
   if (screen === "onboarding") {
