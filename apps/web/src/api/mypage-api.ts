@@ -1,4 +1,4 @@
-import { apiClient, hasApiBase, type ApiResponse } from "./api-client";
+import { apiClient, type ApiResponse } from "./api-client";
 import type { UpdateProfileRequest, UserProfile } from "../types/mypage";
 import type { BodyShape } from "../types/onboarding";
 
@@ -48,9 +48,6 @@ function fromBe1Profile(raw: Be1UserProfile): UserProfile {
 
 /** 내 프로필 조회 — GET /user/profile (BE1 실제 엔드포인트) */
 export async function fetchMyProfile(): Promise<ApiResponse<UserProfile>> {
-  if (!hasApiBase()) {
-    return { success: true, data: MOCK_PROFILE, error: null };
-  }
   try {
     const { data } = await apiClient.get<ApiResponse<Be1UserProfile>>(
       "/user/profile",
@@ -69,18 +66,6 @@ export async function fetchMyProfile(): Promise<ApiResponse<UserProfile>> {
 export async function updateMyProfile(
   patch: UpdateProfileRequest,
 ): Promise<ApiResponse<UserProfile>> {
-  if (!hasApiBase()) {
-    const merged: UserProfile = {
-      ...MOCK_PROFILE,
-      ...patch,
-      bodyInfo: patch.bodyInfo ?? MOCK_PROFILE.bodyInfo,
-      budget: patch.budget ?? MOCK_PROFILE.budget,
-      personalColorResult: patch.personalColor
-        ? { season: patch.personalColor, confidence: 1 }
-        : MOCK_PROFILE.personalColorResult,
-    };
-    return { success: true, data: merged, error: null };
-  }
   try {
     const { data } = await apiClient.put<ApiResponse<Be1UserProfile>>(
       "/user/profile",
@@ -99,8 +84,7 @@ export async function updateMyProfile(
     }
     return { success: true, data: fromBe1Profile(data.data), error: null };
   } catch (err) {
-    // 백엔드가 설정돼 있는데 요청이 실패한 경우(토큰 만료 등) — 저장 안 된 걸 성공으로
-    // 속이면 안 되므로 실패를 그대로 알림. (로컬 프리뷰용 폴백은 위 hasApiBase() 분기에서만 사용)
+    // 요청이 실패한 경우(토큰 만료 등) — 저장 안 된 걸 성공으로 속이면 안 되므로 실패를 그대로 알림.
     console.warn("[mypage-api] 프로필 저장 실패", err);
     return {
       success: false,

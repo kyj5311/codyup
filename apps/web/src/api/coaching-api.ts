@@ -1,5 +1,5 @@
 import { httpClient, type ApiResponse } from "./http-client";
-import { apiClient, hasApiBase } from "./api-client";
+import { apiClient } from "./api-client";
 import type {
   CoordiEvaluationRequest,
   CoordiEvaluationResult,
@@ -40,16 +40,6 @@ function buildMockEvaluation(closetItemIds: number[]): CoordiEvaluationResult {
 export async function evaluateCoordi(
   request: CoordiEvaluationRequest,
 ): Promise<ApiResponse<CoordiEvaluationResult>> {
-  if (!hasApiBase()) {
-    if (request.closetItemIds.length === 0) {
-      return {
-        success: false,
-        data: null,
-        error: { code: "EVAL_001", message: "평가할 옷을 1개 이상 선택해주세요." },
-      };
-    }
-    return { success: true, data: buildMockEvaluation(request.closetItemIds), error: null };
-  }
   try {
     const { data } = await apiClient.post<ApiResponse<CoordiEvaluationResult>>(
       "/coordi-evaluations",
@@ -71,9 +61,6 @@ export async function evaluateCoordi(
 
 /** AI 코디 추천 목록 — GET /api/coordi-recommendations */
 export async function fetchCoordiRecommendations(): Promise<ApiResponse<CoordiRecommendation[]>> {
-  if (!hasApiBase()) {
-    return { success: true, data: MOCK_RECOMMENDATIONS, error: null };
-  }
   try {
     const { data } = await apiClient.get<ApiResponse<CoordiRecommendation[]>>(
       "/coordi-recommendations",

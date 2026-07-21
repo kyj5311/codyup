@@ -1,4 +1,4 @@
-import { apiClient, hasApiBase, type ApiResponse } from "./api-client";
+import { apiClient, type ApiResponse } from "./api-client";
 import type { RoadmapData, RoadmapItem } from "../types/roadmap";
 
 // TODO(BE2): 실제 엔드포인트 스펙 확정되면 아래 목데이터 제거
@@ -54,9 +54,6 @@ const MOCK_ROADMAP: RoadmapData = {
 
 /** 구매 로드맵 조회 — TODO(BE2): GET /api/purchase-roadmap 스펙 확정 */
 export async function fetchRoadmap(): Promise<ApiResponse<RoadmapData>> {
-  if (!hasApiBase()) {
-    return { success: true, data: MOCK_ROADMAP, error: null };
-  }
   try {
     const { data } =
       await apiClient.get<ApiResponse<RoadmapData>>("/purchase-roadmap");
@@ -72,17 +69,6 @@ export async function toggleRoadmapItemPurchased(
   itemId: string,
   isPurchased: boolean,
 ): Promise<ApiResponse<RoadmapItem>> {
-  if (!hasApiBase()) {
-    const item = MOCK_ROADMAP.items.find((i) => i.id === itemId) ?? null;
-    if (item) item.isPurchased = isPurchased;
-    return {
-      success: !!item,
-      data: item,
-      error: item
-        ? null
-        : { code: "ROADMAP_001", message: "로드맵 아이템을 찾을 수 없습니다." },
-    };
-  }
   try {
     const { data } = await apiClient.patch<ApiResponse<RoadmapItem>>(
       `/purchase-roadmap/${itemId}`,
