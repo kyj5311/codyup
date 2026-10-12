@@ -16,7 +16,7 @@
 
 | 역할 | 담당 영역 | 작업 폴더 |
 |---|---|---|
-| BE1 | 옷장 데이터 축 — 유저/체형/예산 프로필, 옷장 CRUD, 비전 API 태깅, 옷장 진단 | `apps/api/src/services/closet`, `apps/api/src/services/user` |
+| BE1 | 옷장 데이터 축 — 유저/체형/예산 프로필, 옷장 CRUD, 옷장 진단 (비전 API 자동 태깅은 2차 기능으로 보류, 1차는 수동 입력) | `apps/api/src/services/closet`, `apps/api/src/services/user` |
 | BE2 | 로드맵·AI 코칭 축 — 구매 로드맵 엔진, AI 코디 추천/평가, 개선 피드백 | `apps/api/src/services/roadmap`, `apps/api/src/services/coaching` |
 | FE1 | 온보딩 + 내 옷장 화면 전체 | `apps/web/src/pages/onboarding`, `apps/web/src/pages/closet` |
 | FE2 | 스타일 플랜 + 코디 코칭 + 마이페이지 + 홈 대시보드 | `apps/web/src/pages/style-plan`, `apps/web/src/pages/coaching`, `apps/web/src/pages/mypage`, `apps/web/src/pages/dashboard` |
@@ -155,10 +155,28 @@ codyup/
 | 비공개 키 공유 | Cloudinary·LLM API·비전 API 키 등은 팀 노션 비공개 페이지에만 기록, 채팅방·레포 노출 금지 |
 | 배포 환경변수 | Vercel/Render 대시보드에서 각 프로젝트(`codyup-web`/`codyup-api`)별로 별도 등록 |
 
+## 진행 현황 (수시 업데이트)
+
+### 완료
+- **BE1**: 옷장 CRUD(등록/목록/수정/삭제), 카테고리·색상 집계 분석, 부족 카테고리 추천 로직 완료 → `dev` 브랜치에 머지 완료
+  - 제공 API: `GET /api/closet`(옷장 아이템 목록), `GET /api/user/profile`(퍼스널컬러·체형·예산)
+- **FE1**: 온보딩(디자인 시안 반영 전), 내 옷장 목록 화면 구현 완료 + 백엔드 API 연동 성공
+- **레포**: `codyup` 모노레포 생성, `dev` 브랜치 생성 및 보호(ruleset) 설정 완료, 팀원 초대 완료
+
+### 진행 중 / 확정된 결정사항
+- **옷 등록 방식**: 비전 API 자동 태깅은 2차 기능으로 보류. **1차는 사용자가 카테고리·색상을 직접 선택하는 수동 입력 방식**으로 먼저 완성. 시간이 남으면 이후 비전 API 자동 태깅으로 업그레이드.
+- **화면 우선순위**: 내 옷장 파트를 최우선으로 완성 (기획·디자인팀 결정). FE2(민서)는 초반 1~2일 옷장 파트에 임시 합류 후 본인 도메인(스타일 플랜 등)으로 복귀.
+- **BE2(로드맵·AI 코칭) 착수 브리핑**: BE1이 제공하는 `GET /api/closet`, `GET /api/user/profile` 데이터를 입력값으로 삼아 아래를 구현
+  1. 옷장 데이터 기반 코디 조합 생성 로직
+  2. 유저 퍼스널컬러·체형 반영 AI 코디 평가
+  3. 예산 반영 구매 로드맵 엔진
+  - BE1과는 데이터 스키마(ClosetItem, UserProfile 필드 구조)를 맞춰서 진행할 것
+
 ## 금지 사항
 
 - 비공개 키를 코드에 하드코딩하지 않는다
 - 다른 담당자의 폴더(예: BE1이 `apps/api/src/services/roadmap`)를 임의로 수정하지 않는다 — 필요 시 PR 리뷰를 거친다
+- 부득이하게 다른 담당자의 코드를 수정해야 하는 경우, 최소한의 범위로만 수정하고, 수정 직후 어떤 파일을 왜 고쳤는지 해당 담당자에게 전달할 메시지를 작성한다
 - `main` 브랜치에 직접 머지하지 않는다
 - npm 외 다른 패키지 매니저(yarn/pnpm)를 혼용하지 않는다
 - `apps/web`과 `apps/api`의 의존성을 서로 뒤섞어 설치하지 않는다 (workspace 범위를 지켜서 설치)

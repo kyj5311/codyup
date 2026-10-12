@@ -1,4 +1,23 @@
 @import "tailwindcss";
+
+/* 코디업 온보딩 디자인 토큰 (Figma 화면 팔레트 계승) */
+@theme {
+  --color-cream: #f7f5f1;
+  --color-cream-deep: #efece5;
+  --color-card: #ececE7;
+  --color-yellow: #f6d583;
+  --color-yellow-deep: #f0c452;
+  --color-ink: #1c1b19;
+  --color-ink-soft: #4a473f;
+  --color-gray-text: #948f83;
+  --color-line: #e4e0d8;
+  --color-danger: #e4574c;
+  --color-danger-bg: #fbe4e1;
+
+  --radius-card: 1.5rem;
+  --radius-pill: 999px;
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -31,32 +50,8 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -65,6 +60,7 @@
 
 body {
   margin: 0;
+  background: var(--color-cream);
 }
 
 h1,
